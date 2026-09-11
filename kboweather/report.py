@@ -18,7 +18,7 @@ def signed(x, unit="m") -> str:
     if x is None or (isinstance(x, float) and math.isnan(x)):
         return "-"
     x = 0.0 if abs(x) < 0.05 else x           # no "-0.0"
-    return f"{x:+.1f}{unit}"
+    return f"{x:+.1f}{unit}".replace("-", "−")
 
 
 def status_suffix(g: dict) -> str:
@@ -121,7 +121,7 @@ CSS = """
 :root[data-theme=dark]{--bg:#0F1614;--surface:#182220;--surface-2:#1F2B28;--ink:#E6ECE9;--ink-2:#9FB0A8;--line:#2B3936;
 --clay:#DB7E52;--grass:#4FA774;--grass-2:#27503A;--rain:#6FA3E6;--warn:#D9A441;--bad:#E06A6A;--ok:#5DBB86;--heat:#F07A4E}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);word-break:keep-all}
 main{max-width:1040px;margin:0 auto;padding:28px 20px 56px}
 .top{padding-bottom:2px}
 .eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:8px}

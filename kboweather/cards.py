@@ -44,7 +44,7 @@ def card_doc(day: dict, r: dict) -> str:
     e = html.escape
     return (f'<!doctype html><html data-theme="light"><meta charset="utf-8">{report.FONT_LINK}'
             f'<style>{report.CSS}{EXTRA_CSS}</style><div class="sheet">'
-            f'<div class="cap"><b>{e(_title(day))}</b><span>KBO {e(r["league_name"])}</span></div>'
+            f'<div class="cap"><b>{e(_title(day))}</b><span>{e(r["league_name"])}</span></div>'
             f'{report.game_card(r, folds=False)}<p class="stamp">{e(report.data_stamp(day))}</p></div></html>')
 
 
@@ -77,18 +77,22 @@ def _run(cmd: list[str], timeout: int) -> None:
         raise RuntimeError(f"{Path(cmd[0]).name}: 종료 코드 {code}")
 
 
+_BROKEN: set[str] = set()   # a renderer that failed once is skipped for the rest of the run
+
+
 def render(doc: str, out_png: Path) -> Path:
     out_png.unlink(missing_ok=True)
     errors = []
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / "card.html"
         src.write_text(doc, "utf-8")
-        if exe := _webshot():
+        if "webkit" not in _BROKEN and (exe := _webshot()):
             try:
                 _run([exe, str(src), str(out_png), str(WIDTH), "2"], 40)
             except RuntimeError as e:
                 errors.append(str(e))
-        if not out_png.exists() and (chrome := find_chrome()):
+                _BROKEN.add("webkit")
+        if not out_png.exists() and "chrome" not in _BROKEN and (chrome := find_chrome()):
             try:
                 _run([chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                       "--no-first-run", "--use-mock-keychain", f"--user-data-dir={tmp}/profile",
@@ -96,6 +100,7 @@ def render(doc: str, out_png: Path) -> Path:
                       "--virtual-time-budget=5000", f"--screenshot={out_png}", src.as_uri()], 40)
             except RuntimeError as e:
                 errors.append(str(e))
+                _BROKEN.add("chrome")
     if not out_png.exists() or out_png.stat().st_size < 2000:
         raise RuntimeError("; ".join(errors) or "카드 이미지를 만들 도구가 없음 (WebKit·Chrome)")
     return out_png
