@@ -1,6 +1,7 @@
 # 백업 실행: 맥(launchd 08:30·15:30)이 먼저 돌고, 이 워크플로가 조금 뒤 같은 시간대를 확인합니다.
 # 맥이 이미 돌렸으면(data/runs/ 표시 파일) 바로 끝나고, 아니면 대신 돌린 뒤 결과를 커밋합니다.
-# Secrets: KMA_SERVICE_KEY (선택: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GOOGLE_WEATHER_API_KEY)
+# 수동 실행에서 test_date 를 넣으면 그 날짜 카드 이미지만 만들어 artifact 로 올립니다(전송·커밋 없음).
+# Secrets: KMA_SERVICE_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (선택: GOOGLE_WEATHER_API_KEY)
 name: KBO weather briefing (backup)
 on:
   schedule:
@@ -12,11 +13,22 @@ on:
         description: "표시 파일이 있어도 강제로 실행"
         type: boolean
         default: false
+      test_date:
+        description: "테스트: 이 날짜(YYYY-MM-DD) 카드 이미지만 생성 (전송·커밋 없음)"
+        type: string
+        default: ""
 permissions:
   contents: write
 concurrency:
   group: kboweather
   cancel-in-progress: false
+env:
+  KMA_SERVICE_KEY: ${{ secrets.KMA_SERVICE_KEY }}
+  TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
+  TEST_DATE: ${{ inputs.test_date }}
+  FORCE: ${{ inputs.force && '--force' || '' }}
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -25,16 +37,33 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - name: Run unless the Mac already did
-        env:
-          KMA_SERVICE_KEY: ${{ secrets.KMA_SERVICE_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
-        run: python -m kboweather auto --runner github ${{ inputs.force && '--force' || '' }}
-      - name: Commit results
+      - name: Did the Mac already run this slot?
+        id: plan
         run: |
-          mkdir -p data/runs data/history out
+          if [ -n "$TEST_DATE" ]; then echo "action=test" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "action=$(python -m kboweather auto --runner github --plan $FORCE)" >> "$GITHUB_OUTPUT"
+      - name: Korean fonts for the card images
+        if: steps.plan.outputs.action != 'skip'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk >/dev/null
+      - name: Run briefing (backup)
+        if: steps.plan.outputs.action == 'run'
+        run: python -m kboweather auto --runner github $FORCE
+      - name: Test — card images only
+        if: steps.plan.outputs.action == 'test'
+        run: |
+          set -o pipefail
+          python -m kboweather date "$TEST_DATE" --cards | tail -4
+          python - <<'EOF'
+          import json, os
+          d = json.load(open(f"out/{os.environ['TEST_DATE']}.json"))
+          ok = sum(1 for r in d["reports"] if r["sources"].get("kma"))
+          print(f"기상청 연결 {ok}/{len(d['reports'])}구장")
+          for w in sorted({w for r in d["reports"] for w in r["sources"]["warnings"]})[:3]:
+              print("경고:", w)
+          EOF
+      - name: Commit results
+        if: steps.plan.outputs.action == 'run'
+        run: |
           files=$(git ls-files -mo --exclude-standard -- data/runs data/history out)
           [ -z "$files" ] && exit 0
           git config user.name "github-actions[bot]"
@@ -44,9 +73,11 @@ jobs:
           for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
           exit 1
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: steps.plan.outputs.action != 'skip'
         with:
           name: briefing-${{ github.run_id }}
-          path: out/*.html
+          path: |
+            out/*.html
+            out/*.png
           retention-days: 14
           if-no-files-found: ignore

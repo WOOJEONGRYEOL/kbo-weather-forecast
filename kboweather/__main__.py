@@ -75,6 +75,9 @@ def _emit(day: dict, s, args) -> int:
         else:
             print("(Ollama 서술 생성 실패 — 템플릿 브리핑만 사용)", file=sys.stderr)
     print(md)
+    if getattr(args, "cards", False):
+        from . import cards as cards_mod
+        print("🖼 " + "  ".join(str(p) for p in cards_mod.make(day, day["reports"], out_dir)))
     if getattr(args, "speak", False):
         p = notify.speak(story if getattr(args, "narrate", False) and story else _speech_text(day), out_dir / f"{day['date']}-brief", s.tts_voice)
         print(f"🔊 {p}")
@@ -82,11 +85,8 @@ def _emit(day: dict, s, args) -> int:
         if not (s.telegram_token and s.telegram_chat_id):
             print("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID 가 없어 전송 생략", file=sys.stderr)
         else:
-            body = report.to_telegram_html(day)
-            if getattr(args, "narrate", False) and story:
-                body = "🎙 " + report.html.escape(story) + "\n\n" + body
-            notify.telegram(s.telegram_token, s.telegram_chat_id, body)
-            print("📨 Telegram 전송 완료")
+            from . import cards as cards_mod
+            print("📨 " + cards_mod.send_briefing(s, day, story=story if getattr(args, "narrate", False) else None))
     print(f"\n→ {stem.with_suffix('.json')}  {stem.with_suffix('.md')}  {html_path}")
     return 0
 
@@ -137,6 +137,7 @@ def main(argv=None) -> int:
         sp.add_argument("--telegram", action="store_true")
         sp.add_argument("--narrate", action="store_true", help="Ollama 로컬 LLM 캐스터 멘트")
         sp.add_argument("--speak", action="store_true", help="macOS say 로 음성 파일 생성")
+        sp.add_argument("--cards", action="store_true", help="텔레그램용 카드 이미지(PNG)만 out/ 에 생성")
 
     sp = sub.add_parser("today"); common(sp)
     sp = sub.add_parser("date"); sp.add_argument("date"); common(sp)
@@ -147,6 +148,7 @@ def main(argv=None) -> int:
     sp = sub.add_parser("auto", help="예약 실행: 이 시간대를 아직 아무도 안 돌렸을 때만 실행")
     sp.add_argument("--runner", default="local", choices=["local", "github"])
     sp.add_argument("--force", action="store_true", help="표시 파일이 있어도 실행")
+    sp.add_argument("--plan", action="store_true", help="실행할지(run)/건너뛸지(skip)만 출력")
     sp = sub.add_parser("backtest"); sp.add_argument("--start", default="2026-03-20"); sp.add_argument("--end", default="2026-09-10")
     sp.add_argument("--games", default=str(Path(__file__).resolve().parent.parent / "data" / "kbo_games_2026.json"))
     sp.add_argument("--league", default="all", choices=["1", "2", "all"])
@@ -166,7 +168,7 @@ def main(argv=None) -> int:
         return cmd_verify(a)
     if a.cmd == "auto":
         from . import auto as auto_mod
-        return auto_mod.run(a.runner, a.force)
+        return auto_mod.run(a.runner, a.force, a.plan)
     return 1
 
 

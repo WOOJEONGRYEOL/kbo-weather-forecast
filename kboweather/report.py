@@ -80,14 +80,31 @@ def to_markdown(day: dict) -> str:
 
 
 def to_telegram_html(day: dict) -> str:
-    """Telegram 'HTML' parse mode: only <b>, <i>, <code> etc."""
-    lines = []
-    for raw in to_markdown(day).splitlines():
-        s = html.escape(raw)
-        if raw.startswith("⚾") or raw.startswith("["):
-            s = f"<b>{s}</b>"
-        lines.append(s)
-    return "\n".join(lines)
+    """Text fallback when card images can't be made: one <blockquote> box per game."""
+    e = html.escape
+    d = dt.date.fromisoformat(day["date"])
+    out = [f"⚾ <b>{d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]}) KBO 구장 날씨</b>"]
+    for le, name, _ in LEAGUES:
+        rs = [r for r in day["reports"] if r["game"]["league"] == le]
+        if not rs:
+            continue
+        out.append(f"\n<b>{name}</b> · {e(league_summary(rs))}")
+        for r in rs:
+            st, rain, cond, carry = r["stadium"], r["rain"], r["conditions"], r["carry"]
+            box = [f"<b>{e(r['start'][11:16])} {e(st['short'])}</b> · {e(r['label'])}{e(status_suffix(r['game']))}",
+                   f"{rain['verdict_icon']} {e(rain['verdict'])}",
+                   f"☔ 비 {pct(rain['p_rain'])} · 취소 {pct(rain['p_cancel'])}"]
+            cf = next((x for x in carry["directions"] if x["direction"] == "CF"), None) if carry else None
+            if carry and (st["dome"] or st["cf_azimuth"] is None or not cf):
+                box.append(f"⚾ 비거리 {signed(carry['air_only_delta_m'], ' m')}" + (" (돔)" if st["dome"] else ""))
+            elif carry:
+                box.append(f"⚾ 비거리 {signed(cf['delta_vs_ref_m'], ' m')} · 홈런 ×{carry['hr_multiplier']:.2f}")
+            if cond and cond.get("wind_speed") is not None:
+                box.append(f"🌬 {e(cond['wind_compass'])}풍 {cond['wind_speed']:.1f} m/s · {cond['temp']}℃")
+            if r["heat"].get("level") not in (None, "ok", "unknown"):
+                box.append(f"🌡 {e(r['heat']['text'])}")
+            out.append("<blockquote>" + "\n".join(box) + "</blockquote>")
+    return "\n".join(out)
 
 
 # ---- HTML dashboard ------------------------------------------------------------
@@ -226,7 +243,8 @@ def league_summary(rs: list[dict]) -> str:
     if carries:
         best = max(carries, key=lambda x: x[1])
         worst = min(carries, key=lambda x: x[1])
-        parts.append(f"타구가 가장 뻗는 곳 {best[0]['stadium']['short']} {best[1]:+.1f} m, 가장 안 뻗는 곳 {worst[0]['stadium']['short']} {worst[1]:+.1f} m")
+        parts.append(f"타구가 가장 뻗는 곳 {best[0]['stadium']['short']} {best[1]:+.1f} m, "
+                     f"가장 안 뻗는 곳 {worst[0]['stadium']['short']} {worst[1]:+.1f} m".replace("-", "−"))
     return " · ".join(parts)
 
 
@@ -365,7 +383,7 @@ def to_html(day: dict) -> str:
         '중단/취소 조건을 판정한 뒤 시스템별 비율을 평균한 값(75 %)에 고해상도 모델 7개의 동의율(25 %)을 섞은 것입니다. '
         '기상청 단기·초단기예보가 연결돼 있으면 기상청 강수확률도 경기까지 남은 시간에 따라 25 %(하루 이상 전)~50 %(6시간 이내) 비중으로 함께 반영합니다. '
         '<b>비거리 지수</b>는 100 mph·28°·1800 rpm 표준 타구를 오늘 공기밀도와 구장 외야 방향의 바람으로 시뮬레이션해 표준 대기(20 ℃·1013 hPa·50 %·무풍, 124.8 m)와 비교한 값이며, '
-        '관중석이 바람을 막는 정도는 실측 자료가 없어 구장 구조를 보고 정한 추정값(1군 구장 50–55 %, 개방형 퓨처스 구장 80–85 %)을 10 m 풍속에 곱했습니다.그림은 북쪽이 위인 구장 평면도이고 주황 화살표가 바람이 불어가는 방향입니다. '
+        '관중석이 바람을 막는 정도는 실측 자료가 없어 구장 구조를 보고 정한 추정값(1군 구장 50–55 %, 개방형 퓨처스 구장 80–85 %)을 10 m 풍속에 곱했습니다. 그림은 북쪽이 위인 구장 평면도이고 주황 화살표가 바람이 불어가는 방향입니다. '
         '<b>폭염</b>은 기상청 여름철 체감온도 산출식과 KBO 2026-08 개정 기준(체감 35 ℃ 취소 가능, 33 ℃ 지연 가능)을 따릅니다. '
         f'생성 {e(day["generated_at"][:16])} · 데이터 {"기상청(단기예보 조회서비스), " if kma_used else ""}Open-Meteo, KBO 공식 일정 · 위성 판독 구장 방위각(±10°)'
         '</section></main>' + TAB_JS)

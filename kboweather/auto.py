@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from . import forecast, notify, report, stadiums as stadiums_mod
+from . import cards, forecast, report, stadiums as stadiums_mod
 from .config import load_settings
 from .kbo import games_on
 
@@ -29,16 +29,22 @@ def slot_for(now: dt.datetime) -> str | None:
     return None
 
 
-def run(runner: str, force: bool = False, now: dt.datetime | None = None) -> int:
+def run(runner: str, force: bool = False, plan: bool = False, now: dt.datetime | None = None) -> int:
+    """plan=True prints only "run" or "skip" (for the workflow to gate its heavier steps)."""
     now = now or dt.datetime.now(KST).replace(tzinfo=None)
     slot = slot_for(now)
-    if slot is None and not force:
-        print(f"{now:%H:%M} — 브리핑 시간대(06–21시)가 아니라 건너뜀")
-        return 0
     marker = RUNS / f"{now:%Y-%m-%d}-{slot or 'pm'}.json"
-    if marker.exists() and not force:
+    why = None
+    if slot is None and not force:
+        why = f"{now:%H:%M} — 브리핑 시간대(06–21시)가 아니라 건너뜀"
+    elif marker.exists() and not force:
         done = json.loads(marker.read_text("utf-8"))
-        print(f"{marker.name}: {done.get('runner')}에서 {done.get('at', '')[11:16]}에 이미 실행 — 건너뜀")
+        why = f"{marker.name}: {done.get('runner')}에서 {done.get('at', '')[11:16]}에 이미 실행 — 건너뜀"
+    if plan:
+        print("skip" if why else "run")
+        return 0
+    if why:
+        print(why)
         return 0
 
     s = load_settings()
@@ -55,10 +61,13 @@ def run(runner: str, force: bool = False, now: dt.datetime | None = None) -> int
     elif not upcoming:
         sent = "남은 경기 없음"
     else:
-        notify.telegram(s.telegram_token, s.telegram_chat_id, report.to_telegram_html({**day, "reports": upcoming}))
-        sent = "텔레그램 전송"
+        sent = cards.send_briefing(s, day, upcoming)
     RUNS.mkdir(parents=True, exist_ok=True)
     marker.write_text(json.dumps({"runner": runner, "at": day["generated_at"], "games": len(day["reports"]),
                                   "upcoming": len(upcoming), "delivery": sent}, ensure_ascii=False), "utf-8")
-    print(f"{marker.name}: {runner} 실행 — {len(day['reports'])}경기 계산, 남은 경기 {len(upcoming)}, {sent}")
+    kma_ok = sum(1 for r in day["reports"] if r["sources"].get("kma"))
+    print(f"{marker.name}: {runner} 실행 — {len(day['reports'])}경기 계산(기상청 연결 {kma_ok}구장), "
+          f"남은 경기 {len(upcoming)}, {sent}")
+    for w in sorted({w for r in day["reports"] for w in r["sources"].get("warnings", [])})[:3]:
+        print(f"  경고: {w}")
     return 0
