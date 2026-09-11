@@ -1,0 +1,24 @@
+# config.toml 로 복사해서 쓰세요 (전부 선택 사항 — 없어도 동작합니다).
+# 환경변수가 있으면 환경변수가 우선합니다: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
+# GOOGLE_WEATHER_API_KEY, OLLAMA_HOST, OLLAMA_MODEL, KBO_TTS_VOICE
+
+# 텔레그램 봇 (BotFather 에서 발급, chat_id 는 @userinfobot 등으로 확인)
+# telegram_token = "123456:ABC..."
+# telegram_chat_id = "123456789"
+
+# Google Maps Platform Weather API (WeatherNext 3 기반, 월 10,000회 무료)
+# google_weather_key = "AIza..."
+
+# 기상청 단기예보 조회서비스 (공공데이터포털 일반 인증키 — 무료, 자동승인)
+# kma_service_key = "..."
+
+# 로컬 LLM 캐스터 멘트 (--narrate)
+ollama_host = "http://localhost:11434"
+ollama_model = "gemma4:12b"      # exaone3.5:2.4b 가 더 빠르고 한국어 자연스러움
+
+# macOS 음성 브리핑 (--speak)
+tts_voice = "Yuna"
+
+# 경기 길이 가정(시간) — 강수 계산 창 = 시작 1시간 전 ~ 시작 + game_length_h
+game_length_h = 3.5
+forecast_days = 3

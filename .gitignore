@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+data/cache/
+config.toml
+*.aiff
+*.m4a
+.DS_Store
+# out/: 리포트(html·md)만 커밋 — json·로그·음성·백테스트는 제외
+out/*
+!out/*.html
+!out/*.md

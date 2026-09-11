@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 로컬 자동 실행 (1순위). GitHub Actions 가 백업으로 10:00·16:15 에 같은 시간대를 확인합니다.
+     설치: cp scripts/com.woo.kboweather.plist ~/Library/LaunchAgents/
+           launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.woo.kboweather.plist
+     제거: launchctl bootout gui/$(id -u)/com.woo.kboweather
+           rm ~/Library/LaunchAgents/com.woo.kboweather.plist
+     맥이 잠자던 시각의 실행은 깨어날 때 한 번 돌고, 그 사이 GitHub 가 이미 돌렸으면 건너뜁니다. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.woo.kboweather</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/woo/KBO Weather Forecast/scripts/run_auto.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>30</integer></dict>
+  </array>
+  <key>StandardOutPath</key><string>/Users/woo/KBO Weather Forecast/out/launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/woo/KBO Weather Forecast/out/launchd.err</string>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

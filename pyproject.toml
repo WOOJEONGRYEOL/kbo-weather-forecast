@@ -1,0 +1,12 @@
+[project]
+name = "kboweather"
+version = "0.1.0"
+description = "KBO 1군·퓨처스 구장 핀포인트 기상 브리핑 — 우천취소 확률, 타구 비거리 지수, 폭염 판정 (외부 의존성 0, 운영비 0원)"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+kboweather = "kboweather.__main__:main"
+
+[tool.setuptools]
+packages = ["kboweather"]

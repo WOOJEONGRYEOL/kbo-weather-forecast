@@ -1,0 +1,52 @@
+# 백업 실행: 맥(launchd 08:30·15:30)이 먼저 돌고, 이 워크플로가 조금 뒤 같은 시간대를 확인합니다.
+# 맥이 이미 돌렸으면(data/runs/ 표시 파일) 바로 끝나고, 아니면 대신 돌린 뒤 결과를 커밋합니다.
+# Secrets: KMA_SERVICE_KEY (선택: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GOOGLE_WEATHER_API_KEY)
+name: KBO weather briefing (backup)
+on:
+  schedule:
+    - cron: "0 1 * * *"     # 10:00 KST — 오전 시간대 백업 (맥은 08:30)
+    - cron: "15 7 * * *"    # 16:15 KST — 오후 시간대 백업 (맥은 15:30)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "표시 파일이 있어도 강제로 실행"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: kboweather
+  cancel-in-progress: false
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Run unless the Mac already did
+        env:
+          KMA_SERVICE_KEY: ${{ secrets.KMA_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GOOGLE_WEATHER_API_KEY: ${{ secrets.GOOGLE_WEATHER_API_KEY }}
+        run: python -m kboweather auto --runner github ${{ inputs.force && '--force' || '' }}
+      - name: Commit results
+        run: |
+          mkdir -p data/runs data/history out
+          files=$(git ls-files -mo --exclude-standard -- data/runs data/history out)
+          [ -z "$files" ] && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- $files
+          git commit -q -m "backup run $(TZ=Asia/Seoul date '+%F %H:%M')"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: briefing-${{ github.run_id }}
+          path: out/*.html
+          retention-days: 14
+          if-no-files-found: ignore
