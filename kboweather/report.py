@@ -83,7 +83,7 @@ def to_telegram_html(day: dict) -> str:
     """Text fallback when card images can't be made: one <blockquote> box per game."""
     e = html.escape
     d = dt.date.fromisoformat(day["date"])
-    out = [f"⚾ <b>{d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]}) KBO 구장 날씨</b>"]
+    out = [f"⚾ <b>{d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]}) KBO 구장 날씨</b>", f"<i>{e(data_stamp(day))}</i>"]
     for le, name, _ in LEAGUES:
         rs = [r for r in day["reports"] if r["game"]["league"] == le]
         if not rs:
@@ -127,6 +127,7 @@ main{max-width:1040px;margin:0 auto;padding:28px 20px 56px}
 .eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:8px}
 h1{font:700 42px/1 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
 .summary{color:var(--ink-2);margin:0 0 14px;max-width:80ch}
+.stamp{color:var(--ink-2);font-size:13px;margin:10px 0 0}
 h2{font:600 24px/1.1 var(--display);margin:34px 0 12px;letter-spacing:.02em;display:flex;align-items:baseline;gap:10px}
 h2 small{font:500 13px var(--body);color:var(--ink-2)}
 .game{display:grid;grid-template-columns:minmax(150px,1fr) minmax(250px,1.7fr) minmax(220px,1.1fr);gap:12px 26px;
@@ -248,7 +249,22 @@ def league_summary(rs: list[dict]) -> str:
     return " · ".join(parts)
 
 
-def game_card(r: dict) -> str:
+def _when(iso: str, ref: dt.datetime) -> str:
+    t = dt.datetime.fromisoformat(iso)
+    return f"{t:%H:%M}" if t.date() == ref.date() else f"{t.month}/{t.day} {t:%H:%M}"
+
+
+def data_stamp(day: dict) -> str:
+    """When the weather data behind this report was pulled, and which 기상청 issue it used."""
+    t = dt.datetime.fromisoformat(day["generated_at"])
+    bases = [r["sources"].get("kma") or {} for r in day["reports"]]
+    issued = [f"{label} {_when(b, t)}" for key, label in (("short_base", "단기예보"), ("ultra_base", "초단기예보"))
+              if (b := max((x[key] for x in bases if x.get(key)), default=None))]
+    return (f"기상 데이터 {t.month}/{t.day} {t:%H:%M} 업데이트"
+            + (f" · 기상청 {' · '.join(issued)} 발표분" if issued else " · 기상청 자료 없음(앙상블·모델만)"))
+
+
+def game_card(r: dict, folds: bool = True) -> str:
     e = html.escape
     g, st, rain, cond, carry, heat = r["game"], r["stadium"], r["rain"], r["conditions"], r["carry"], r["heat"]
     q = rain.get("game_mm") or {}
@@ -312,7 +328,7 @@ def game_card(r: dict) -> str:
                  '<tr><th>시각</th><th>기온 ℃</th><th>체감 ℃</th><th>습도 %</th><th>강수 중앙/최대 mm</th><th>비 확률 (앙상블)</th><th>모델 POP</th><th>기상청 POP</th><th>바람 m/s</th><th>구름 %</th></tr>'
                  + "".join(rows) + "</table></div></details>")
 
-    return f'<article class="game">{match}{rainblock}{fieldblock}{explain(r)}{hours}</article>'
+    return f'<article class="game">{match}{rainblock}{fieldblock}{explain(r) + hours if folds else ""}</article>'
 
 
 LEAGUES = ((1, "1군", "kbo"), (2, "퓨처스", "futures"))
@@ -352,6 +368,7 @@ def to_html(day: dict) -> str:
              f"<title>KBO 구장 기상 브리핑</title>{FONT_LINK}<style>{CSS}</style><main>",
              '<header class="top"><div class="eyebrow">KBO · 구장 핀포인트 기상</div>',
              f"<h1>{e(date_title(day['date']))} 경기 날씨</h1>",
+             f'<p class="stamp">{e(data_stamp(day))}</p>',
              "</header>"]
     by = {le: [r for r in day["reports"] if r["game"]["league"] == le] for le, _, _ in LEAGUES}
     skip = {le: [s for s in day.get("skipped", []) if s["game"].get("league") == le] for le, _, _ in LEAGUES}

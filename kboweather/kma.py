@@ -88,25 +88,29 @@ class KMA:
         self.key = key
         self.cache_dir = cache_dir
         self.ttl_s = ttl_s
+        self.down = False
 
     def _items(self, op: str, **params) -> list[dict]:
         tag = hashlib.sha1(json.dumps([op, params], sort_keys=True).encode()).hexdigest()[:20]
         cache = self.cache_dir / f"kma_{tag}.json" if self.cache_dir else None
         if cache and cache.exists() and time.time() - cache.stat().st_mtime < self.ttl_s:
             return json.loads(cache.read_text("utf-8"))
+        if self.down:
+            raise KMAError("기상청 API 연결 불가 (이번 실행에서 이미 실패해 건너뜀)")
         q = {"serviceKey": self.key, "pageNo": 1, "numOfRows": 1500, "dataType": "JSON", **params}
         url = f"{BASE}/{op}?" + urllib.parse.urlencode(q)
         raw, last = None, None
-        for attempt in range(3):
+        for _ in range(2):
             try:
                 req = urllib.request.Request(url, headers={"User-Agent": "kbo-weather-forecast/0.1"})
-                with urllib.request.urlopen(req, timeout=30) as r:
+                with urllib.request.urlopen(req, timeout=12) as r:
                     raw = r.read().decode("utf-8", "replace")
                 break
-            except (urllib.error.URLError, TimeoutError) as e:   # never echo the URL: it carries the key
+            except (urllib.error.URLError, TimeoutError, OSError) as e:   # never echo the URL: it carries the key
                 last = e
-                time.sleep(2 * (attempt + 1))
+                time.sleep(2)
         if raw is None:
+            self.down = True   # e.g. data.go.kr unreachable from overseas CI — don't stall on every stadium
             raise KMAError(f"기상청 API 연결 실패 ({type(last).__name__})")
         try:
             data = json.loads(raw)
