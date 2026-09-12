@@ -1,5 +1,10 @@
 """Optional: Google Maps Platform Weather API (powered by WeatherNext 3).
 
+NOT USABLE IN KOREA (checked 2026-09-12 with a billing-enabled project): every
+Korean coordinate answers 404 "Information is not supported for this location",
+while New York and London answer 200 with the same key. Kept for the day the
+coverage arrives — or for parks outside Korea.
+
 Free tier: 10,000 calls/month (SKU 'Weather Usage', Essentials); above it $0.15 per
 1,000 calls. This client pages 24 hours at a time, so one venue costs
 ceil(hours/24) calls — 15 venues × 2 runs × 3 pages ≈ 2,700/month.
