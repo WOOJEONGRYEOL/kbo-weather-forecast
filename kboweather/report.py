@@ -212,6 +212,7 @@ grid-template-columns:1fr 136px;grid-template-rows:auto auto;gap:4px 14px;align-
 .flight .mark{stroke:var(--ink-2);stroke-width:2}.flight .mark.today{stroke:var(--clay)}
 .flight .mlab{font:600 12px var(--body);fill:var(--ink-2)}.flight .mlab.today{fill:var(--clay)}
 .flight .lab .note{display:block;margin-top:6px;font-size:11px;color:var(--ink-2)}
+.flight .lab .pass{display:block;margin-top:5px;font-size:12px;color:var(--ink)}
 .flight svg{width:100%;height:auto;display:block}
 .flight .trace{fill:none;stroke:var(--ink-2);stroke-width:1.3;stroke-dasharray:4 4;opacity:.75}
 .flight .trace.today{stroke:var(--clay);stroke-width:2.2;stroke-dasharray:none;opacity:1}
@@ -346,7 +347,7 @@ def flight_svg(r: dict) -> str:
                f'<line x1="0" y1="{base}" x2="{w:.0f}" y2="{base}" stroke="var(--line)" stroke-width="1.5"/>', extra]
         if fence:
             fx = pad + (fence - x0) * sx
-            fh = min(base - top, 2.4 * sz)          # 담장 높이는 자료가 없어 표시용 2.4 m
+            fh = min(base - top, (st.get("fence_height_m") or 2.4) * sz)   # 실제 높이(없으면 표시용 2.4 m)
             out.append(f'<rect x="{fx - 3:.1f}" y="{base - fh:.1f}" width="6" height="{fh:.1f}" fill="var(--grass)" rx="1.5"/>')
         out.append(f'<path class="trace" d="{d_of(ref)}"/><path class="trace today" d="{d_of(today)}"/>')
         out.append(ball(d_of(ref), True) + ball(d_of(today), False) + "</svg>")
@@ -370,9 +371,15 @@ def flight_svg(r: dict) -> str:
     delta = (cf or {}).get("delta_vs_ref_m") or carry.get("air_only_delta_m") or 0.0
     verdict = ("돔 — 공기 무게만 반영" if st["dome"] else
                "바람이 밀어줌" if delta > 0.5 else "바람이 붙잡음" if delta < -0.5 else "바람 영향 작음")
+    cfc = ((carry.get("fence_check") or {}).get("CF") or {})
+    wall, z_now, z_ref = cfc.get("wall_m"), cfc.get("height_today_m"), cfc.get("height_ref_m")
+    pass_line = ""
+    if wall and z_now is not None:
+        base_txt = f" (평소 {z_ref:g} m)" if z_ref is not None else ""
+        pass_line = f'<span class="pass">담장({wall:g} m) 지점 통과 높이 {z_now:g} m{base_txt}</span>'
     lab = (f'<div class="lab"><b>{signed(delta)}</b>'
            f'<span class="k today"></span>오늘 {land_t:g} m<br>'
-           f'<span class="k"></span>표준 {land_r:g} m<br>{e(verdict)}'
+           f'<span class="k"></span>표준 {land_r:g} m<br>{e(verdict)}{pass_line}'
            f'<span class="note">기준 타구 161 km/h · 28° · 백스핀 1800 rpm<br>'
            f'표준 = 20℃ · 1013 hPa · 무풍일 때의 같은 타구<br>'
            f'아래는 담장 앞 {int(x1 - x0)} m 확대</span></div>')

@@ -1,74 +1,608 @@
 {
-  "_notes": "cf_azimuth = bearing (deg from true north) from home plate to center field, measured on north-up satellite imagery (ESRI World Imagery crops, 2026-09; 대전 from V-World 2025 tile). Eyeball precision ≈ ±10° — enough for the wind decomposition (cos error < 2%). shelter = fraction of the ambient 10 m wind assumed to reach the ball inside the bowl (0 = dome). fences in metres from Korean Wikipedia infoboxes; null = unknown → defaults.",
-  "stadiums": [
-    {"key": "jamsil", "name": "서울종합운동장 야구장 (잠실)", "short": "잠실", "city": "서울", "lat": 37.51215, "lon": 127.07198, "tier": 1, "dome": false,
-     "cf_azimuth": 136, "azimuth_source": "satellite ±8°", "shelter": 0.5, "fences": {"lf": 100, "cf": 125, "rf": 100, "lc": null, "rc": null}, "fence_height_m": 2.6,
-     "surface": "natural", "drainage": "good", "kbo_names": ["잠실"]},
-    {"key": "gocheok", "name": "고척스카이돔", "short": "고척", "city": "서울", "lat": 37.49833, "lon": 126.86667, "tier": 1, "dome": true,
-     "cf_azimuth": null, "azimuth_source": "dome", "shelter": 0.0, "fences": {"lf": 99, "cf": 122, "rf": 99, "lc": null, "rc": null}, "fence_height_m": 4.0,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["고척"], "notes": "돔구장 — 강수·바람 무관, 공기밀도만 반영"},
-    {"key": "incheon", "name": "인천SSG랜더스필드", "short": "문학", "city": "인천", "lat": 37.43680, "lon": 126.69340, "tier": 1, "dome": false,
-     "cf_azimuth": 180, "azimuth_source": "satellite ±8°", "shelter": 0.55, "fences": {"lf": 95, "cf": 120, "rf": 95, "lc": 115, "rc": 115}, "fence_height_m": 2.8,
-     "surface": "natural", "drainage": "good", "kbo_names": ["문학", "인천"]},
-    {"key": "suwon", "name": "수원KT위즈파크", "short": "수원", "city": "수원", "lat": 37.29976, "lon": 127.00978, "tier": 1, "dome": false,
-     "cf_azimuth": 148, "azimuth_source": "satellite ±12°", "shelter": 0.55, "fences": {"lf": 98, "cf": 120, "rf": 98, "lc": 115, "rc": 115}, "fence_height_m": 4.0,
-     "surface": "natural", "drainage": "good", "kbo_names": ["수원"]},
-    {"key": "daejeon", "name": "대전한화생명볼파크", "short": "대전", "city": "대전", "lat": 36.31625, "lon": 127.43144, "tier": 1, "dome": false,
-     "cf_azimuth": 108, "azimuth_source": "V-World 2025 tile ±12°", "shelter": 0.55, "fences": {"lf": 99, "cf": 122, "rf": 95, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "good", "kbo_names": ["대전"], "notes": "우측에는 높이 약 8 m의 '몬스터 월'이 있어, 우측 타구는 계산보다 넘어가기 어렵습니다."},
-    {"key": "daegu", "name": "대구삼성라이온즈파크", "short": "대구", "city": "대구", "lat": 35.84111, "lon": 128.68167, "tier": 1, "dome": false,
-     "cf_azimuth": 50, "azimuth_source": "satellite ±8°", "shelter": 0.55, "fences": {"lf": 99, "cf": 122.5, "rf": 99, "lc": null, "rc": null}, "fence_height_m": 3.2,
-     "surface": "natural", "drainage": "good", "kbo_names": ["대구"]},
-    {"key": "sajik", "name": "사직야구장", "short": "사직", "city": "부산", "lat": 35.19408, "lon": 129.06158, "tier": 1, "dome": false,
-     "cf_azimuth": 143, "azimuth_source": "satellite ±8°", "shelter": 0.5, "fences": {"lf": 95.8, "cf": 121, "rf": 95.8, "lc": 113, "rc": 113}, "fence_height_m": 6.0,
-     "surface": "natural", "drainage": "good", "kbo_names": ["사직"]},
-    {"key": "gwangju", "name": "광주기아챔피언스필드", "short": "광주", "city": "광주", "lat": 35.16834, "lon": 126.88899, "tier": 1, "dome": false,
-     "cf_azimuth": 55, "azimuth_source": "satellite ±8° (OSM 중앙출입구 위치와 일치)", "shelter": 0.55, "fences": {"lf": 99, "cf": 121.9, "rf": 99, "lc": 117, "rc": 117}, "fence_height_m": 3.4,
-     "surface": "natural", "drainage": "good", "kbo_names": ["광주"]},
-    {"key": "changwon", "name": "창원NC파크", "short": "창원", "city": "창원", "lat": 35.22274, "lon": 128.58242, "tier": 1, "dome": false,
-     "cf_azimuth": 135, "azimuth_source": "satellite ±10°", "shelter": 0.55, "fences": {"lf": 101, "cf": 122, "rf": 101, "lc": null, "rc": null}, "fence_height_m": 3.6,
-     "surface": "natural", "drainage": "good", "kbo_names": ["창원"]},
-    {"key": "ulsan", "name": "울산문수야구장", "short": "울산", "city": "울산", "lat": 35.53203, "lon": 129.26576, "tier": 2, "dome": false,
-     "cf_azimuth": 139, "azimuth_source": "satellite ±8°", "shelter": 0.7, "fences": {"lf": 101, "cf": 122, "rf": 101, "lc": null, "rc": null}, "fence_height_m": 2.4,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["울산"]},
-    {"key": "pohang", "name": "포항야구장", "short": "포항", "city": "포항", "lat": 36.00778, "lon": 129.35944, "tier": 2, "dome": false,
-     "cf_azimuth": 168, "azimuth_source": "satellite+OSM ±8°", "shelter": 0.7, "fences": {"lf": 99, "cf": 122, "rf": 99, "lc": null, "rc": null}, "fence_height_m": 3.0,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["포항"]},
-    {"key": "cheongju", "name": "청주야구장", "short": "청주", "city": "청주", "lat": 36.63881, "lon": 127.47013, "tier": 2, "dome": false,
-     "cf_azimuth": 215, "azimuth_source": "satellite ±12°", "shelter": 0.7, "fences": {"lf": 96, "cf": 120, "rf": 96, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["청주"]},
-    {"key": "masan", "name": "마산야구장", "short": "마산", "city": "창원", "lat": 35.22060, "lon": 128.58090, "tier": 2, "dome": false,
-     "cf_azimuth": 145, "azimuth_source": "satellite ±8°", "shelter": 0.65, "fences": {"lf": 97, "cf": 116, "rf": 97, "lc": 110, "rc": 110}, "fence_height_m": 3.8,
-     "surface": "natural", "drainage": "good", "kbo_names": ["마산"]},
-    {"key": "icheon_doosan", "name": "이천 베어스파크", "short": "이천(두산)", "city": "이천", "lat": 37.33155, "lon": 127.45780, "tier": 2, "dome": false,
-     "cf_azimuth": 132, "azimuth_source": "satellite ±10°", "shelter": 0.85, "fences": {"lf": 100, "cf": 123, "rf": 100, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["이천(두산)", "이천"]},
-    {"key": "icheon_lg", "name": "이천 LG챔피언스파크", "short": "이천(LG)", "city": "이천", "lat": 37.22910, "lon": 127.50520, "tier": 2, "dome": false,
-     "cf_azimuth": 190, "azimuth_source": "satellite ±15° (메인 천연잔디 구장)", "shelter": 0.85, "fences": {"lf": 100, "cf": 125, "rf": 100, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["이천(LG)"]},
-    {"key": "goyang", "name": "고양 국가대표 야구훈련장", "short": "고양", "city": "고양", "lat": 37.68149, "lon": 126.74135, "tier": 2, "dome": false,
-     "cf_azimuth": 172, "azimuth_source": "satellite ±10°", "shelter": 0.85, "fences": {"lf": 98, "cf": 121, "rf": 98, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["고양"]},
-    {"key": "ganghwa", "name": "강화 SSG퓨처스필드", "short": "강화", "city": "강화", "lat": 37.63700, "lon": 126.49980, "tier": 2, "dome": false,
-     "cf_azimuth": 235, "azimuth_source": "satellite ±10° (길상면 2면 복합구장, 주경기장 천연잔디)", "shelter": 0.85, "fences": {"lf": 98, "cf": 120, "rf": 98, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["강화"]},
-    {"key": "seosan", "name": "한화이글스 서산야구장", "short": "서산", "city": "서산", "lat": 36.82528, "lon": 126.45583, "tier": 2, "dome": false,
-     "cf_azimuth": 170, "azimuth_source": "satellite ±15°", "shelter": 0.85, "fences": {"lf": 100, "cf": 120, "rf": 100, "lc": null, "rc": null}, "fence_height_m": 2.0,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["서산"]},
-    {"key": "iksan", "name": "익산야구장", "short": "익산", "city": "익산", "lat": 35.96713, "lon": 127.00618, "tier": 2, "dome": false,
-     "cf_azimuth": 210, "azimuth_source": "satellite ±15°", "shelter": 0.8, "fences": {"lf": 100, "cf": 120, "rf": 100, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["익산"]},
-    {"key": "hampyeong", "name": "함평 기아챌린저스필드", "short": "함평", "city": "함평", "lat": 34.99170, "lon": 126.55760, "tier": 2, "dome": false,
-     "cf_azimuth": 219, "azimuth_source": "satellite ±15° (인조잔디 주경기장)", "shelter": 0.85, "fences": {"lf": 100, "cf": 120, "rf": 100, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["함평"]},
-    {"key": "gyeongsan", "name": "경산 삼성라이온즈볼파크", "short": "경산", "city": "경산", "lat": 35.86478, "lon": 128.80558, "tier": 2, "dome": false,
-     "cf_azimuth": 182, "azimuth_source": "satellite ±8°", "shelter": 0.85, "fences": {"lf": 98, "cf": 125, "rf": 98, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["경산"]},
-    {"key": "sangdong", "name": "김해 상동야구장", "short": "상동", "city": "김해", "lat": 35.29740, "lon": 128.93070, "tier": 2, "dome": false,
-     "cf_azimuth": 190, "azimuth_source": "satellite ±10° (인조잔디 주경기장)", "shelter": 0.85, "fences": {"lf": 97, "cf": 120, "rf": 97, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "artificial", "drainage": "turf", "kbo_names": ["상동"]},
-    {"key": "mungyeong", "name": "문경 상무야구장", "short": "문경", "city": "문경", "lat": 36.64900, "lon": 128.16480, "tier": 2, "dome": false,
-     "cf_azimuth": 180, "azimuth_source": "satellite ±10°", "shelter": 0.85, "fences": {"lf": 98, "cf": 120, "rf": 98, "lc": null, "rc": null}, "fence_height_m": null,
-     "surface": "natural", "drainage": "fair", "kbo_names": ["문경"]}
-  ]
+ "_notes": "cf_azimuth = bearing (deg from true north) from home plate to center field, measured on north-up satellite imagery (ESRI World Imagery crops, 2026-09; 대전 from V-World 2025 tile). Eyeball precision ≈ ±10° — enough for the wind decomposition (cos error < 2%). shelter = fraction of the ambient 10 m wind assumed to reach the ball inside the bowl (0 = dome). fences in metres from Korean Wikipedia infoboxes; null = unknown → defaults.",
+ "stadiums": [
+  {
+   "key": "jamsil",
+   "name": "서울종합운동장 야구장 (잠실)",
+   "short": "잠실",
+   "city": "서울",
+   "lat": 37.51215,
+   "lon": 127.07198,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 136,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.5,
+   "fences": {
+    "lf": 100,
+    "cf": 125,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 2.6,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "잠실"
+   ]
+  },
+  {
+   "key": "gocheok",
+   "name": "고척스카이돔",
+   "short": "고척",
+   "city": "서울",
+   "lat": 37.49833,
+   "lon": 126.86667,
+   "tier": 1,
+   "dome": true,
+   "cf_azimuth": null,
+   "azimuth_source": "dome",
+   "shelter": 0.0,
+   "fences": {
+    "lf": 99,
+    "cf": 122,
+    "rf": 99,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 4.0,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "고척"
+   ],
+   "notes": "돔구장 — 강수·바람 무관, 공기밀도만 반영"
+  },
+  {
+   "key": "incheon",
+   "name": "인천SSG랜더스필드",
+   "short": "문학",
+   "city": "인천",
+   "lat": 37.4368,
+   "lon": 126.6934,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 180,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 95,
+    "cf": 120,
+    "rf": 95,
+    "lc": 115,
+    "rc": 115
+   },
+   "fence_height_m": 2.8,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "문학",
+    "인천"
+   ]
+  },
+  {
+   "key": "suwon",
+   "name": "수원KT위즈파크",
+   "short": "수원",
+   "city": "수원",
+   "lat": 37.29976,
+   "lon": 127.00978,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 148,
+   "azimuth_source": "satellite ±12°",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 98,
+    "cf": 120,
+    "rf": 98,
+    "lc": 115,
+    "rc": 115
+   },
+   "fence_height_m": 4.0,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "수원"
+   ]
+  },
+  {
+   "key": "daejeon",
+   "name": "대전한화생명볼파크",
+   "short": "대전",
+   "city": "대전",
+   "lat": 36.31625,
+   "lon": 127.43144,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 108,
+   "azimuth_source": "V-World 2025 tile ±12°",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 99,
+    "cf": 122,
+    "rf": 95,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "대전"
+   ],
+   "notes": "우측에는 높이 약 8 m의 '몬스터 월'이 있어, 우측 타구는 계산보다 넘어가기 어렵습니다."
+  },
+  {
+   "key": "daegu",
+   "name": "대구삼성라이온즈파크",
+   "short": "대구",
+   "city": "대구",
+   "lat": 35.84111,
+   "lon": 128.68167,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 50,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 99,
+    "cf": 122.5,
+    "rf": 99,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 3.6,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "대구"
+   ],
+   "notes": "펜스 3.6 m 는 상단 보호 철조망 포함 높이"
+  },
+  {
+   "key": "sajik",
+   "name": "사직야구장",
+   "short": "사직",
+   "city": "부산",
+   "lat": 35.19408,
+   "lon": 129.06158,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 143,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.5,
+   "fences": {
+    "lf": 95.8,
+    "cf": 121,
+    "rf": 95.8,
+    "lc": 113,
+    "rc": 113
+   },
+   "fence_height_m": 6.0,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "사직"
+   ]
+  },
+  {
+   "key": "gwangju",
+   "name": "광주기아챔피언스필드",
+   "short": "광주",
+   "city": "광주",
+   "lat": 35.16834,
+   "lon": 126.88899,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 55,
+   "azimuth_source": "satellite ±8° (OSM 중앙출입구 위치와 일치)",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 99,
+    "cf": 121.9,
+    "rf": 99,
+    "lc": 117,
+    "rc": 117
+   },
+   "fence_height_m": 3.4,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "광주"
+   ]
+  },
+  {
+   "key": "changwon",
+   "name": "창원NC파크",
+   "short": "창원",
+   "city": "창원",
+   "lat": 35.22274,
+   "lon": 128.58242,
+   "tier": 1,
+   "dome": false,
+   "cf_azimuth": 135,
+   "azimuth_source": "satellite ±10°",
+   "shelter": 0.55,
+   "fences": {
+    "lf": 101,
+    "cf": 122,
+    "rf": 101,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 3.6,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "창원"
+   ]
+  },
+  {
+   "key": "ulsan",
+   "name": "울산문수야구장",
+   "short": "울산",
+   "city": "울산",
+   "lat": 35.53203,
+   "lon": 129.26576,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 139,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.7,
+   "fences": {
+    "lf": 101,
+    "cf": 122,
+    "rf": 101,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 2.4,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "울산"
+   ]
+  },
+  {
+   "key": "pohang",
+   "name": "포항야구장",
+   "short": "포항",
+   "city": "포항",
+   "lat": 36.00778,
+   "lon": 129.35944,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 168,
+   "azimuth_source": "satellite+OSM ±8°",
+   "shelter": 0.7,
+   "fences": {
+    "lf": 99,
+    "cf": 122,
+    "rf": 99,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 3.0,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "포항"
+   ]
+  },
+  {
+   "key": "cheongju",
+   "name": "청주야구장",
+   "short": "청주",
+   "city": "청주",
+   "lat": 36.63881,
+   "lon": 127.47013,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 215,
+   "azimuth_source": "satellite ±12°",
+   "shelter": 0.7,
+   "fences": {
+    "lf": 96,
+    "cf": 120,
+    "rf": 96,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "청주"
+   ]
+  },
+  {
+   "key": "masan",
+   "name": "마산야구장",
+   "short": "마산",
+   "city": "창원",
+   "lat": 35.2206,
+   "lon": 128.5809,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 145,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.65,
+   "fences": {
+    "lf": 97,
+    "cf": 116,
+    "rf": 97,
+    "lc": 110,
+    "rc": 110
+   },
+   "fence_height_m": 3.8,
+   "surface": "natural",
+   "drainage": "good",
+   "kbo_names": [
+    "마산"
+   ]
+  },
+  {
+   "key": "icheon_doosan",
+   "name": "이천 베어스파크",
+   "short": "이천(두산)",
+   "city": "이천",
+   "lat": 37.33155,
+   "lon": 127.4578,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 132,
+   "azimuth_source": "satellite ±10°",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 100,
+    "cf": 123,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "이천(두산)",
+    "이천"
+   ]
+  },
+  {
+   "key": "icheon_lg",
+   "name": "이천 LG챔피언스파크",
+   "short": "이천(LG)",
+   "city": "이천",
+   "lat": 37.2291,
+   "lon": 127.5052,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 190,
+   "azimuth_source": "satellite ±15° (메인 천연잔디 구장)",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 100,
+    "cf": 125,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "이천(LG)"
+   ]
+  },
+  {
+   "key": "goyang",
+   "name": "고양 국가대표 야구훈련장",
+   "short": "고양",
+   "city": "고양",
+   "lat": 37.68149,
+   "lon": 126.74135,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 172,
+   "azimuth_source": "satellite ±10°",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 98,
+    "cf": 121,
+    "rf": 98,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "고양"
+   ]
+  },
+  {
+   "key": "ganghwa",
+   "name": "강화 SSG퓨처스필드",
+   "short": "강화",
+   "city": "강화",
+   "lat": 37.637,
+   "lon": 126.4998,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 235,
+   "azimuth_source": "satellite ±10° (길상면 2면 복합구장, 주경기장 천연잔디)",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 98,
+    "cf": 120,
+    "rf": 98,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "강화"
+   ]
+  },
+  {
+   "key": "seosan",
+   "name": "한화이글스 서산야구장",
+   "short": "서산",
+   "city": "서산",
+   "lat": 36.82528,
+   "lon": 126.45583,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 170,
+   "azimuth_source": "satellite ±15°",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 100,
+    "cf": 120,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": 2.0,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "서산"
+   ]
+  },
+  {
+   "key": "iksan",
+   "name": "익산야구장",
+   "short": "익산",
+   "city": "익산",
+   "lat": 35.96713,
+   "lon": 127.00618,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 210,
+   "azimuth_source": "satellite ±15°",
+   "shelter": 0.8,
+   "fences": {
+    "lf": 100,
+    "cf": 120,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "익산"
+   ]
+  },
+  {
+   "key": "hampyeong",
+   "name": "함평 기아챌린저스필드",
+   "short": "함평",
+   "city": "함평",
+   "lat": 34.9917,
+   "lon": 126.5576,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 219,
+   "azimuth_source": "satellite ±15° (인조잔디 주경기장)",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 100,
+    "cf": 120,
+    "rf": 100,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "함평"
+   ]
+  },
+  {
+   "key": "gyeongsan",
+   "name": "경산 삼성라이온즈볼파크",
+   "short": "경산",
+   "city": "경산",
+   "lat": 35.86478,
+   "lon": 128.80558,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 182,
+   "azimuth_source": "satellite ±8°",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 98,
+    "cf": 125,
+    "rf": 98,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "경산"
+   ]
+  },
+  {
+   "key": "sangdong",
+   "name": "김해 상동야구장",
+   "short": "상동",
+   "city": "김해",
+   "lat": 35.2974,
+   "lon": 128.9307,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 190,
+   "azimuth_source": "satellite ±10° (인조잔디 주경기장)",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 97,
+    "cf": 120,
+    "rf": 97,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "artificial",
+   "drainage": "turf",
+   "kbo_names": [
+    "상동"
+   ]
+  },
+  {
+   "key": "mungyeong",
+   "name": "문경 상무야구장",
+   "short": "문경",
+   "city": "문경",
+   "lat": 36.649,
+   "lon": 128.1648,
+   "tier": 2,
+   "dome": false,
+   "cf_azimuth": 180,
+   "azimuth_source": "satellite ±10°",
+   "shelter": 0.85,
+   "fences": {
+    "lf": 98,
+    "cf": 120,
+    "rf": 98,
+    "lc": null,
+    "rc": null
+   },
+   "fence_height_m": null,
+   "surface": "natural",
+   "drainage": "fair",
+   "kbo_names": [
+    "문경"
+   ]
+  }
+ ]
 }

@@ -192,6 +192,7 @@ def game_report(game: Game, st: Stadium, wx: WeatherCache, settings: Settings) -
         "stadium": {"key": st.key, "name": st.name, "short": st.short, "city": st.city,
                     "lat": st.lat, "lon": st.lon, "dome": st.dome, "cf_azimuth": st.cf_azimuth,
                     "azimuth_source": st.azimuth_source, "shelter": st.shelter, "fences": st.fences,
+                    "fence_height_m": st.fence_height_m,
                     "tier": st.tier, "surface": st.surface, "drainage": st.drainage, "notes": st.notes,
                     "elevation_m": det.get("elevation")},
         "conditions": cond,
@@ -211,8 +212,17 @@ def fence_check(carry: dict, st: Stadium) -> dict:
     for d in carry["directions"]:
         fence = st.fences.get({"LF": "lf", "CF": "cf", "RF": "rf"}[d["direction"]])
         if fence:
-            out[d["direction"]] = {"fence_m": fence, "margin_m": round(d["distance_m"] - fence, 1),
-                                   "ref_margin_m": round(carry["ref_distance_m"] - fence, 1)}
+            row = {"fence_m": fence, "margin_m": round(d["distance_m"] - fence, 1),
+                   "ref_margin_m": round(carry["ref_distance_m"] - fence, 1)}
+            if d["direction"] == "CF":     # 중앙만 궤적을 갖고 있음
+                wall = getattr(st, "fence_height_m", None)
+                z_today = physics.height_at(carry.get("path_cf") or [], fence)
+                z_ref = physics.height_at(carry.get("path_ref") or [], fence)
+                row.update(height_today_m=z_today, height_ref_m=z_ref, wall_m=wall)
+                if wall and z_today is not None:
+                    row["clears"] = z_today > wall
+                    row["over_wall_m"] = round(z_today - wall, 2)
+            out[d["direction"]] = row
     return out
 
 

@@ -204,6 +204,20 @@ def carry_report(temp_c: float, pressure_station_hpa: float, rh_pct: float,
     return out
 
 
+def height_at(path, distance_m: float) -> float | None:
+    """궤적이 그 거리를 지날 때의 높이(m). 담장을 넘는지 보려면 착지 거리가 아니라 이 값이 필요하다."""
+    pts = [(x, z) for x, z in path]
+    if not pts or distance_m < pts[0][0] or distance_m > pts[-1][0]:
+        return None
+    for (x0, z0), (x1, z1) in zip(pts, pts[1:]):
+        if x0 <= distance_m <= x1:
+            if x1 == x0:
+                return round(z1, 2)
+            f = (distance_m - x0) / (x1 - x0)
+            return round(z0 + (z1 - z0) * f, 2)
+    return None
+
+
 def hr_rate_multiplier(delta_m: float, ref_distance_m: float) -> float:
     """Rule of thumb (Nathan): +1 % fly-ball carry ≈ +6 % home runs."""
     return 1.0 + 6.0 * (delta_m / ref_distance_m)
