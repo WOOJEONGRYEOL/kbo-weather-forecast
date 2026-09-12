@@ -347,7 +347,9 @@ def flight_svg(r: dict) -> str:
     lab = (f'<div class="lab"><b>{signed(delta)}</b>'
            f'<span class="k today"></span>오늘 {land_t:g} m<br>'
            f'<span class="k"></span>표준 {land_r:g} m<br>{e(verdict)}'
-           f'<span class="note">아래는 담장 앞 {int(x1 - x0)} m 확대</span></div>')
+           f'<span class="note">기준 타구 161 km/h · 28° · 백스핀 1800 rpm<br>'
+           f'표준 = 20℃ · 1013 hPa · 무풍일 때의 같은 타구<br>'
+           f'아래는 담장 앞 {int(x1 - x0)} m 확대</span></div>')
     return f'<div class="flight">{full}{zoom}{lab}</div>'
 
 
