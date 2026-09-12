@@ -15,6 +15,7 @@ class Settings:
     out_dir: Path = ROOT / "out"
     telegram_token: str | None = None
     telegram_chat_id: str | None = None
+    dashboard_url: str = "https://woojeongryeol.github.io/kbo-weather-forecast/"   # 텔레그램 카드 아래 링크
     telegram_leagues: tuple[int, ...] = (1,)   # 텔레그램으로 보낼 리그 (1군만; 퓨처스까지 보내려면 (1, 2))
     google_weather_key: str | None = None      # optional: WeatherNext 3 via Maps Platform Weather API
     kma_service_key: str | None = None         # optional: 기상청 단기·초단기예보 (공공데이터포털 일반 인증키)
@@ -29,6 +30,7 @@ ENV = {
     "telegram_token": "TELEGRAM_BOT_TOKEN",
     "telegram_chat_id": "TELEGRAM_CHAT_ID",
     "telegram_leagues": "TELEGRAM_LEAGUES",
+    "dashboard_url": "KBO_DASHBOARD_URL",
     "google_weather_key": "GOOGLE_WEATHER_API_KEY",
     "kma_service_key": "KMA_SERVICE_KEY",
     "ollama_host": "OLLAMA_HOST",

@@ -21,6 +21,7 @@ RUNS = Path(__file__).resolve().parent.parent / "data" / "runs"
 
 
 PRE_MIN, PRE_MAX = 50, 70     # 1군 경기 시작 50~70분 전 사이에 한 번 (15분마다 깨우면 반드시 걸림)
+PM_GAP = 75                   # 경기 전 실행과 이만큼 붙으면 오후 정기 실행은 생략
 
 
 def first_pitches(now: dt.datetime, cache_dir) -> list[dt.datetime]:
@@ -47,6 +48,9 @@ def slot_for(now: dt.datetime, starts: list[dt.datetime] | None = None) -> str |
     if 6 <= now.hour < 12:
         return "am"
     if 12 <= now.hour < 21:
+        gap = min((abs((s - dt.timedelta(minutes=60) - now).total_seconds()) / 60 for s in starts or []), default=None)
+        if gap is not None and gap <= PM_GAP:
+            return None           # 곧(또는 방금) 경기 전 실행이 있으므로 정기 실행은 건너뜀
         return "pm"
     return None
 

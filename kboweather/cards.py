@@ -140,6 +140,10 @@ def send_briefing(s, day: dict, reports: list[dict] | None = None, story: str | 
         return f"텔레그램 텍스트 전송 (카드 실패: {str(e).splitlines()[0][:80]})"
     if story:
         notify.telegram(s.telegram_token, s.telegram_chat_id, "🎙 " + html.escape(story[:900]))
-    for r, png in zip(rs, pngs):
-        notify.telegram_photos(s.telegram_token, s.telegram_chat_id, [png], caption(r)[:1024])
+    link = (getattr(s, "dashboard_url", "") or "").strip()
+    for i, (r, png) in enumerate(zip(rs, pngs)):
+        cap = caption(r)[:940]
+        if link and i == len(pngs) - 1:      # 마지막 장에만 — 매 장 반복은 지저분하다
+            cap += f'\n🔗 <a href="{html.escape(link, quote=True)}">전체 대시보드 보기</a>'
+        notify.telegram_photos(s.telegram_token, s.telegram_chat_id, [png], cap)
     return f"텔레그램 카드 {len(pngs)}장 각각 전송"
