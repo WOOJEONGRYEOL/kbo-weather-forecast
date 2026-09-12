@@ -127,6 +127,12 @@ def caption(r: dict) -> str:
             f"{e(' · '.join(bits))}")
 
 
+def _targets(s) -> list[str]:
+    """설정된 대화방·채널 목록. 문자열 하나만 들어와도 목록으로 다룬다."""
+    v = s.telegram_chat_id
+    return [str(x) for x in (v if isinstance(v, (list, tuple)) else [v]) if x]
+
+
 def send_briefing(s, day: dict, reports: list[dict] | None = None, story: str | None = None) -> str:
     """One message per game card. 1군 only unless `telegram_leagues` says otherwise."""
     leagues = tuple(getattr(s, "telegram_leagues", (1,)))
@@ -136,14 +142,20 @@ def send_briefing(s, day: dict, reports: list[dict] | None = None, story: str | 
     try:
         pngs = make(day, rs, s.out_dir)
     except Exception as e:  # never lose the briefing over a rendering problem
-        notify.telegram(s.telegram_token, s.telegram_chat_id, report.to_telegram_html({**day, "reports": rs}))
+        body = report.to_telegram_html({**day, "reports": rs})
+        for chat in _targets(s):
+            notify.telegram(s.telegram_token, chat, body)
         return f"텔레그램 텍스트 전송 (카드 실패: {str(e).splitlines()[0][:80]})"
     if story:
-        notify.telegram(s.telegram_token, s.telegram_chat_id, "🎙 " + html.escape(story[:900]))
+        for chat in _targets(s):
+            notify.telegram(s.telegram_token, chat, "🎙 " + html.escape(story[:900]))
     link = (getattr(s, "dashboard_url", "") or "").strip()
+    targets = _targets(s)
     for i, (r, png) in enumerate(zip(rs, pngs)):
         cap = caption(r)[:940]
         if link and i == len(pngs) - 1:      # 마지막 장에만 — 매 장 반복은 지저분하다
             cap += f'\n🔗 <a href="{html.escape(link, quote=True)}">전체 대시보드 보기</a>'
-        notify.telegram_photos(s.telegram_token, s.telegram_chat_id, [png], cap)
-    return f"텔레그램 카드 {len(pngs)}장 각각 전송"
+        for chat in targets:                 # 같은 이미지를 대상마다 한 번씩
+            notify.telegram_photos(s.telegram_token, chat, [png], cap)
+    where = "" if len(targets) < 2 else f" ({len(targets)}곳)"
+    return f"텔레그램 카드 {len(pngs)}장 각각 전송{where}"

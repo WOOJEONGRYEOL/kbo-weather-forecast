@@ -14,7 +14,7 @@ class Settings:
     cache_dir: Path = ROOT / "data" / "cache"
     out_dir: Path = ROOT / "out"
     telegram_token: str | None = None
-    telegram_chat_id: str | None = None
+    telegram_chat_id: str | list | None = None   # 여러 곳이면 쉼표 구분 문자열 또는 리스트
     dashboard_url: str = "https://woojeongryeol.github.io/kbo-weather-forecast/"   # 텔레그램 카드 아래 링크
     telegram_leagues: tuple[int, ...] = (1,)   # 텔레그램으로 보낼 리그 (1군만; 퓨처스까지 보내려면 (1, 2))
     google_weather_key: str | None = None      # optional: WeatherNext 3 via Maps Platform Weather API
@@ -49,6 +49,10 @@ def load_settings(path: Path | None = None) -> Settings:
     for attr, var in ENV.items():
         if os.environ.get(var):
             setattr(s, attr, os.environ[var])
+    if s.telegram_chat_id is not None:            # "111,-100222" 또는 [111, -100222] → 목록
+        raw = s.telegram_chat_id
+        ids = raw.split(',') if isinstance(raw, str) else list(raw)
+        s.telegram_chat_id = [str(x).strip() for x in ids if str(x).strip()]
     if isinstance(s.telegram_leagues, str):        # env var: "1" or "1,2"
         s.telegram_leagues = tuple(int(x) for x in s.telegram_leagues.replace(" ", "").split(",") if x)
     else:
