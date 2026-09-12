@@ -56,7 +56,7 @@ REF_DENSITY = air_density(REF_TEMP_C, REF_PRESSURE_HPA, REF_RH)
 @dataclass(frozen=True)
 class Launch:
     speed_ms: float = 44.7        # 100 mph ≈ 161 km/h
-    angle_deg: float = 28.0       # typical home-run launch angle
+    angle_deg: float = 30.0       # 이 속도·백스핀에서 비거리가 최대가 되는 각도 (본 모델로 확인)
     backspin_rpm: float = 1800.0
     height_m: float = 1.0
 

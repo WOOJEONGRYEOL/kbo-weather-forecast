@@ -152,7 +152,7 @@ def carry_text(r: dict) -> str:
         return " ".join(out)
     dirs = {x["direction"]: x for x in carry["directions"]}
     cf = dirs["CF"]
-    out.append(f"바람까지 넣으면, 표준 조건에서 {carry['ref_distance_m']:.1f} m 날아가는 타구(시속 161 km·발사각 28°)가 "
+    out.append(f"바람까지 넣으면, 표준 조건에서 {carry['ref_distance_m']:.1f} m 날아가는 타구(시속 161 km·발사각 30°)가 "
                f"오늘은 중앙 쪽으로 {cf['distance_m']:.1f} m({_m(cf['delta_vs_ref_m'])}) 날아갑니다.")
     out.append(f"우타자가 당겨친 좌측 타구는 {_m(dirs['LF']['delta_vs_ref_m'])}, "
                f"좌타자가 당겨친 우측 타구는 {_m(dirs['RF']['delta_vs_ref_m'])}입니다.")
