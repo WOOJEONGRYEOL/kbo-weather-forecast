@@ -163,7 +163,7 @@ def carry_report(temp_c: float, pressure_station_hpa: float, rh_pct: float,
                  wind_speed_ms: float, wind_from_deg: float | None,
                  cf_azimuth_deg: float | None, shelter: float = 1.0,
                  launch: Launch = Launch()) -> dict:
-    """Standard fly ball (100 mph / 28° / 1800 rpm) under today's air + wind,
+    """Standard fly ball (100 mph / 30° / 1800 rpm) under today's air + wind,
     compared with the reference atmosphere (20°C, 1013 hPa, 50 %, calm).
 
     `shelter` scales the ambient 10 m wind to what the ball actually feels
