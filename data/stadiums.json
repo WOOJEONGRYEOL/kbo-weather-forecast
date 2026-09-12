@@ -1,5 +1,5 @@
 {
- "_notes": "cf_azimuth = bearing (deg from true north) from home plate to center field, measured on north-up satellite imagery (ESRI World Imagery crops, 2026-09; 대전 from V-World 2025 tile). Eyeball precision ≈ ±10° — enough for the wind decomposition (cos error < 2%). shelter = fraction of the ambient 10 m wind assumed to reach the ball inside the bowl (0 = dome). fences in metres from Korean Wikipedia infoboxes; null = unknown → defaults.",
+ "_notes": "cf_azimuth = bearing (deg from true north) from home plate to center field, measured on north-up satellite imagery (ESRI World Imagery crops, 2026-09; 대전 from V-World 2025 tile). Eyeball precision ≈ ±10° — enough for the wind decomposition (cos error < 2%). shelter = fraction of the ambient 10 m wind assumed to reach the ball inside the bowl (0 = dome). fences in metres from Korean Wikipedia infoboxes (대전 중앙 2.4 m 는 사용자 확인값); fence_height_m null = 미확인 → 그림에서만 표시용 2.4 m 사용, 통과 높이 판정에는 쓰지 않음.",
  "stadiums": [
   {
    "key": "jamsil",
@@ -126,13 +126,13 @@
     "lc": null,
     "rc": null
    },
-   "fence_height_m": null,
+   "fence_height_m": 2.4,
    "surface": "natural",
    "drainage": "good",
    "kbo_names": [
     "대전"
    ],
-   "notes": "우측에는 높이 약 8 m의 '몬스터 월'이 있어, 우측 타구는 계산보다 넘어가기 어렵습니다."
+   "notes": "중앙 펜스 2.4 m. 우측에는 높이 약 8 m '몬스터 월'이 있어 우측 타구는 계산보다 넘어가기 어렵습니다."
   },
   {
    "key": "daegu",
@@ -315,7 +315,8 @@
    "drainage": "fair",
    "kbo_names": [
     "청주"
-   ]
+   ],
+   "notes": "2025년 대전 신구장 개장 이후 1군 경기 없음 — 펜스 높이 미확인(계산에서 표시용 값 사용)"
   },
   {
    "key": "masan",
