@@ -137,6 +137,7 @@ h2 small{font:500 13px var(--body);color:var(--ink-2)}
 .game{display:grid;grid-template-columns:minmax(150px,1fr) minmax(250px,1.7fr) minmax(220px,1.1fr);gap:12px 26px;
 background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:0 0 12px}
 .game>.rain{grid-column:2/-1}
+.game>*{min-width:0}                 /* 내용 최소 폭이 카드를 화면 밖으로 밀지 않게 */
 .game>details{grid-column:1/-1}
 .carrybox{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:12px;display:grid;
 grid-template-columns:1fr;gap:12px;align-items:center}
@@ -162,7 +163,7 @@ box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
 .meter .val{font:700 27px/1 var(--display);font-variant-numeric:tabular-nums}
 .meter i{grid-column:1/-1;display:block;height:6px;background:var(--surface-2);border-radius:3px;position:relative;overflow:hidden}
 .meter i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--rain);border-radius:3px}
-.fine{font-size:12px;color:var(--ink-2);margin-top:8px}
+.fine{font-size:12px;color:var(--ink-2);margin-top:8px;overflow-wrap:anywhere}
 .field{display:grid;grid-template-columns:100px 1fr;grid-template-rows:auto auto auto;gap:3px 12px;align-items:center}
 .field svg{width:100px;height:100px;grid-row:1/4;display:block}
 .carry .big{font:700 28px/1 var(--display);font-variant-numeric:tabular-nums}
@@ -237,7 +238,29 @@ padding:7px 16px;font:600 13px var(--body);cursor:pointer}
 .scrub{width:100%;accent-color:var(--grass)}
 .rvals{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.6}
 .rvals b{color:var(--ink);font-weight:600}
-@media(max-width:760px){.flight{grid-template-columns:1fr}.play{grid-template-columns:1fr}}
+@media(max-width:760px){
+.game{padding:14px 14px 12px}
+.game>.rain{grid-column:1}                      /* 1열로 접힐 때 2번째 열 고정 해제 */
+.flight{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+.flight .lab{grid-column:1;grid-row:auto}
+.carrybox{grid-template-columns:1fr}
+.play{grid-template-columns:1fr}
+.play .stage{width:100%}
+.flight svg text,.flight .mlab{font-size:20px}   /* 그림이 축소돼도 읽히게 */
+.field{grid-template-columns:92px 1fr}
+}
+@media(max-width:480px){
+main{padding:20px 14px 40px}
+h1{font-size:34px;line-height:1.05}
+.time{font-size:30px}
+.meters{grid-template-columns:1fr;gap:10px;margin-top:8px}
+.meter{grid-template-columns:1fr auto;column-gap:10px}
+.meter .lbl{font-size:12.5px;line-height:1.3}
+.meter .val{font-size:24px}
+.teams{gap:6px}
+.tm{width:24px;height:24px}
+table{font-size:12px}
+}
 @media(prefers-reduced-motion:reduce){.streak,.ball,.play .rain{animation:none}}
 .static .streak,.static .ball,.static .play .rain{animation:none}
 """
