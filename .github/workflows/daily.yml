@@ -1,4 +1,4 @@
-# 백업 실행: 맥(launchd 08:30·15:30)이 먼저 돌고, 이 워크플로가 조금 뒤 같은 시간대를 확인합니다.
+# 백업 실행: 맥(launchd 08:30·15:30·1군 경기 1시간 전)이 먼저 돌고, 이 워크플로가 같은 시간대를 확인합니다.
 # 맥이 이미 돌렸으면(data/runs/ 표시 파일) 바로 끝나고, 아니면 대신 돌린 뒤 결과를 커밋합니다.
 # 수동 실행에서 test_date 를 넣으면 그 날짜 카드 이미지만 만들어 artifact 로 올립니다(전송·커밋 없음).
 # Secrets: KMA_SERVICE_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (선택: GOOGLE_WEATHER_API_KEY)
@@ -6,7 +6,7 @@ name: KBO weather briefing (backup)
 on:
   schedule:
     - cron: "0 1 * * *"     # 10:00 KST — 오전 시간대 백업 (맥은 08:30)
-    - cron: "15 7 * * *"    # 16:15 KST — 오후 시간대 백업 (맥은 15:30)
+    - cron: "*/30 3-12 * * *"  # 12:00–21:30 KST 30분마다 — 오후 슬롯과 "경기 1시간 전" 백업 (대부분 즉시 건너뜀)
   workflow_dispatch:
     inputs:
       force:

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 로컬 자동 실행 (1순위). GitHub Actions 가 백업으로 10:00·16:15 에 같은 시간대를 확인합니다.
+<!-- 로컬 자동 실행 (1순위). 08:30·15:30 정기 실행에 더해 15분마다 깨어나
+     1군 경기 시작 50~70분 전이면 한 번 더 실행합니다(그날 일정을 읽어 판단).
+     GitHub Actions 가 백업으로 10:00 과 12:00~21:30 30분마다 같은 시간대를 확인합니다.
      설치: cp scripts/com.woo.kboweather.plist ~/Library/LaunchAgents/
            launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.woo.kboweather.plist
      제거: launchctl bootout gui/$(id -u)/com.woo.kboweather
@@ -14,6 +16,7 @@
     <string>/bin/bash</string>
     <string>/Users/woo/KBO Weather Forecast/scripts/run_auto.sh</string>
   </array>
+  <key>StartInterval</key><integer>900</integer>
   <key>StartCalendarInterval</key>
   <array>
     <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer></dict>

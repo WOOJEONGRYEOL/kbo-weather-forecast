@@ -20,11 +20,32 @@ KST = ZoneInfo("Asia/Seoul")
 RUNS = Path(__file__).resolve().parent.parent / "data" / "runs"
 
 
-def slot_for(now: dt.datetime) -> str | None:
-    """am 06–15시, pm 15–21시. Outside that there is no game left to brief."""
-    if 6 <= now.hour < 15:
+PRE_MIN, PRE_MAX = 50, 70     # 1군 경기 시작 50~70분 전 사이에 한 번 (15분마다 깨우면 반드시 걸림)
+
+
+def first_pitches(now: dt.datetime, cache_dir) -> list[dt.datetime]:
+    """오늘 1군 경기 시작 시각들. 그날 일정을 그대로 읽으므로 시간이 바뀌면 따라간다."""
+    try:
+        games = games_on(now.date(), leagues=(1,), cache_dir=cache_dir)
+    except Exception:
+        return []                 # 일정 조회 실패 시엔 정기 슬롯만
+    out = set()
+    for g in games:
+        try:
+            out.add(dt.datetime.combine(now.date(), dt.time.fromisoformat(g.time)))
+        except ValueError:
+            continue
+    return sorted(out)
+
+
+def slot_for(now: dt.datetime, starts: list[dt.datetime] | None = None) -> str | None:
+    """pre-HHMM: 1군 경기 시작 1시간 전 · am: 아침(06–12시) · pm: 오후(12–21시)."""
+    for start in starts or []:
+        if PRE_MIN <= (start - now).total_seconds() / 60 <= PRE_MAX:
+            return f"pre-{start:%H%M}"
+    if 6 <= now.hour < 12:
         return "am"
-    if 15 <= now.hour < 21:
+    if 12 <= now.hour < 21:
         return "pm"
     return None
 
@@ -32,7 +53,9 @@ def slot_for(now: dt.datetime) -> str | None:
 def run(runner: str, force: bool = False, plan: bool = False, now: dt.datetime | None = None) -> int:
     """plan=True prints only "run" or "skip" (for the workflow to gate its heavier steps)."""
     now = now or dt.datetime.now(KST).replace(tzinfo=None)
-    slot = slot_for(now)
+    s = load_settings()
+    starts = first_pitches(now, s.cache_dir) if 9 <= now.hour < 22 else []
+    slot = slot_for(now, starts)
     marker = RUNS / f"{now:%Y-%m-%d}-{slot or 'pm'}.json"
     why = None
     if slot is None and not force:
@@ -47,7 +70,6 @@ def run(runner: str, force: bool = False, plan: bool = False, now: dt.datetime |
         print(why)
         return 0
 
-    s = load_settings()
     day = forecast.run_day(now.date(), games_on(now.date(), cache_dir=s.cache_dir), stadiums_mod.load(), s, (1, 2))
     s.out_dir.mkdir(parents=True, exist_ok=True)
     stem = s.out_dir / day["date"]
