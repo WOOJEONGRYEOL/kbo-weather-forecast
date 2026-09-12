@@ -1,6 +1,8 @@
 """Optional: Google Maps Platform Weather API (powered by WeatherNext 3).
 
-Free tier: 10,000 calls / month → ~25 venues × 2 runs/day is well inside it.
+Free tier: 10,000 calls/month (SKU 'Weather Usage', Essentials); above it $0.15 per
+1,000 calls. This client pages 24 hours at a time, so one venue costs
+ceil(hours/24) calls — 15 venues × 2 runs × 3 pages ≈ 2,700/month.
 Set GOOGLE_WEATHER_API_KEY (or google_weather_key in config.toml) to enable.
 The hourly series is mapped onto Open-Meteo variable names so the rest of the
 pipeline treats it as one more model ("google_weathernext3").

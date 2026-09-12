@@ -30,7 +30,7 @@ python3 -m kboweather verify                # 기상청 vs 앙상블 vs 최종 �
 | 결정론 예보 7모델 | Open-Meteo `forecast` — JMA MSM 5 km, ECMWF IFS 9 km, ICON, UKMO 10 km, GFS, GEM, ARPEGE | 기온·습도·기압·바람·강수·CAPE 등. **기상청 LDAPS 1.5 km는 2026-04 KIM 전환 후 Open-Meteo 공급 중단** — 복구되면 자동 포함 (`kma_ldps` 목록에 있음) |
 | 앙상블 6시스템 212멤버 | Open-Meteo `ensemble` — ECMWF ENS 51, ECMWF AIFS-ENS 51, GEFS 31, ICON-EPS 40, GEM 21, UKMO 18 | 강수 확률의 근거 |
 | 과거 예보 아카이브 | Open-Meteo `historical-forecast` | 백테스트: 당시 발표됐던 예보 그대로 |
-| (선택) WeatherNext 3 | Google Maps Platform **Weather API** (`hours:lookup`, 월 10,000회 무료) | `GOOGLE_WEATHER_API_KEY` 설정 시 8번째 모델 `google_weathernext3` 로 자동 합류. BigQuery/Earth Engine 경로는 GCP 과금·복잡도 때문에 제외 |
+| (선택) WeatherNext 3 | Google Maps Platform **Weather API** (`hours:lookup`) — SKU `Weather Usage`(Essentials) 월 10,000회 무료, 초과 시 1,000회당 $0.15. 구장당 3회(24시간씩 3페이지) × 하루 2회 × 15구장 ≈ 월 2,700회로 무료 한도 안. 단 프로젝트에 결제 수단 등록은 필요 | `GOOGLE_WEATHER_API_KEY` 설정 시 8번째 모델 `google_weathernext3` 로 자동 합류. BigQuery/Earth Engine 경로는 GCP 과금·복잡도 때문에 제외 |
 | 기상청 단기·초단기예보 | 공공데이터포털 `VilageFcstInfoService_2.0` (무료 키 `kma_service_key`, 하루 10,000회) | 기상청 5 km 동네예보 격자의 시간별 **강수확률**·강수량·기온·바람. 초단기예보(6시간)가 덮는 시간은 초단기예보 우선. 출처표시 조건 |
 | 구장 좌표·외야 방위각·펜스 | 위성사진(ESRI World Imagery, 대전 신구장은 V-World 2025 타일) 직접 판독 + 한국어 위키백과 인포박스 + OSM | `data/stadiums.json`. 방위각은 ±10° 정도 — 바람 분해에는 충분 (cos 오차 < 2 %) |
 
