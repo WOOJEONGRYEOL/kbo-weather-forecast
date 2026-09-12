@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#23362E"/><stop offset="1" stop-color="#0E1613"/>
+    </linearGradient>
+    <linearGradient id="dome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D0663A"/><stop offset="1" stop-color="#A8471F"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="0.38" cy="0.32" r="0.78">
+      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E4E2D8"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="url(#bg)"/>
+
+  <!-- 빗줄기 -->
+  <g stroke="#6FA3E6" stroke-width="17" stroke-linecap="round" fill="none">
+    <line x1="214" y1="112" x2="176" y2="260" opacity=".85"/>
+    <line x1="352" y1="78"  x2="314" y2="226" opacity=".6"/>
+    <line x1="500" y1="104" x2="462" y2="228" opacity=".8"/>
+    <line x1="648" y1="78"  x2="610" y2="220" opacity=".6"/>
+    <line x1="806" y1="112" x2="768" y2="268" opacity=".85"/>
+    <line x1="892" y1="204" x2="860" y2="322" opacity=".5"/>
+    <line x1="140" y1="224" x2="112" y2="336" opacity=".5"/>
+  </g>
+
+  <!-- 우산 -->
+  <path d="M206,452 A306,306 0 0 1 818,452
+           C766,518 716,518 665,452
+           C614,518 563,518 512,452
+           C461,518 410,518 359,452
+           C308,518 258,518 206,452 Z"
+        fill="url(#dome)" stroke="#7E3414" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M512,452 L512,612 q0,74 -74,74 q-56,0 -68,-46"
+        fill="none" stroke="#F0EDE3" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="512" cy="428" r="20" fill="#F0EDE3"/>
+
+  <!-- 야구공: 밝은 테두리로 어두운 배경에서도 공처럼 보이게 -->
+  <g transform="translate(660,790)">
+    <circle r="128" fill="url(#ball)" stroke="#F7F6F1" stroke-width="6"/>
+    <circle r="128" fill="none" stroke="#2A3A33" stroke-width="3" opacity=".35"/>
+    <path d="M-64,-100 A126,126 0 0 0 -64,100" fill="none" stroke="#C0392B" stroke-width="16" stroke-linecap="round"/>
+    <path d="M64,-100 A126,126 0 0 1 64,100" fill="none" stroke="#C0392B" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-52,-84 l-16,14 M-58,-30 l-19,6 M-58,30 l-19,-6 M-52,84 l-16,-14"
+          stroke="#C0392B" stroke-width="9" stroke-linecap="round" opacity=".75"/>
+    <path d="M52,-84 l16,14 M58,-30 l19,6 M58,30 l19,-6 M52,84 l16,-14"
+          stroke="#C0392B" stroke-width="9" stroke-linecap="round" opacity=".75"/>
+  </g>
+</svg>
