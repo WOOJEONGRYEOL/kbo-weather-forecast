@@ -24,7 +24,7 @@ SWIFT_SRC = ROOT / "scripts" / "webshot.swift"
 CHROME = ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
           "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 WIDTH = 600       # the dashboard's phone layout (one column below 760 px)
-CHROME_H = 500    # Chrome can't measure the page, so it gets a canvas tall enough for one card
+CHROME_H = 680    # Chrome can't measure the page, so it gets a canvas tall enough for one card (궤적 그림 포함)
 EXTRA_CSS = """
 body{background:var(--bg)}
 .sheet{width:600px;padding:14px 14px 12px}
