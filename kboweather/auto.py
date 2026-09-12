@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from . import cards, forecast, report, stadiums as stadiums_mod
 from .config import load_settings
-from .kbo import games_on
+from .kbo import fetch_games, games_on
 
 KST = ZoneInfo("Asia/Seoul")
 RUNS = Path(__file__).resolve().parent.parent / "data" / "runs"
@@ -26,7 +26,8 @@ PRE_MIN, PRE_MAX = 50, 70     # 1군 경기 시작 50~70분 전 사이에 한 �
 def first_pitches(now: dt.datetime, cache_dir) -> list[dt.datetime]:
     """오늘 1군 경기 시작 시각들. 그날 일정을 그대로 읽으므로 시간이 바뀌면 따라간다."""
     try:
-        games = games_on(now.date(), leagues=(1,), cache_dir=cache_dir)
+        # 시작 시각은 한 번 정해지면 바뀌지 않으므로 하루 한두 번만 받아오고 캐시를 재사용한다
+        games = fetch_games(now.date(), 1, cache_dir, cache_ttl_s=6 * 3600)
     except Exception:
         return []                 # 일정 조회 실패 시엔 정기 슬롯만
     out = set()
