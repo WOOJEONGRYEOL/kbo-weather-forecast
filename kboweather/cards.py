@@ -43,7 +43,7 @@ def _title(day: dict) -> str:
 def card_doc(day: dict, r: dict) -> str:
     e = html.escape
     return (f'<!doctype html><html data-theme="light" class="static"><meta charset="utf-8">{report.FONT_LINK}'
-            f'<style>{report.CSS}{EXTRA_CSS}</style><div class="sheet">'
+            f'<style>{report.CSS}{EXTRA_CSS}</style>{report.logo_css([r])}<div class="sheet">'
             f'<div class="cap"><b>{e(_title(day))}</b><span>{e(r["league_name"])}</span></div>'
             f'{report.game_card(r, folds=False)}<p class="stamp">{e(report.data_stamp(day))}</p></div></html>')
 

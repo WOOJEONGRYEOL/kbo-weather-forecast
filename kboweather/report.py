@@ -1,10 +1,13 @@
 """Render a day report as Markdown (Telegram/console) and a self-contained HTML dashboard."""
 from __future__ import annotations
 
+import base64
 import datetime as dt
 import html
 import json
 import math
+from functools import lru_cache
+from pathlib import Path
 
 from .explain import explain
 
@@ -145,6 +148,7 @@ grid-template-columns:1fr;gap:12px;align-items:center}
 .tag{font:500 11px/1 var(--body);letter-spacing:.08em;border:1px solid var(--line);border-radius:3px;padding:3px 6px;color:var(--ink-2);white-space:nowrap}
 .tag.kbo{color:var(--ink);border-color:var(--ink-2)}
 .teams{margin-top:7px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tm[class*="tm-"]{background-color:transparent;box-shadow:none;font-size:0;background-size:contain;background-repeat:no-repeat;background-position:center}
 .tm{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;flex:none;
 font:700 10.5px/1 var(--body);letter-spacing:-.03em;color:#fff;background:var(--tm-bg,#555);
 box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
@@ -199,8 +203,15 @@ font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:po
 @keyframes fly{0%{offset-distance:0%}70%{offset-distance:100%}100%{offset-distance:100%}}
 @keyframes rainfall{to{background-position:0 46px}}
 .streak{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0;animation:drift var(--dur,3s) linear infinite var(--delay,0s)}
-.flight{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:2px;padding-top:10px;display:grid;grid-template-columns:1fr 132px;gap:12px;align-items:center}
-.flight svg{width:100%;height:auto;aspect-ratio:880/196;display:block;overflow:visible}
+.flight{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:2px;padding-top:10px;display:grid;
+grid-template-columns:1fr 136px;grid-template-rows:auto auto;gap:4px 14px;align-items:center}
+.flight .lab{grid-column:2;grid-row:1/3}
+.flight .full{aspect-ratio:880/148}
+.flight .zoom{aspect-ratio:880/188;background:var(--surface-2);border-radius:8px}
+.flight .mark{stroke:var(--ink-2);stroke-width:2}.flight .mark.today{stroke:var(--clay)}
+.flight .mlab{font:600 12px var(--body);fill:var(--ink-2)}.flight .mlab.today{fill:var(--clay)}
+.flight .lab .note{display:block;margin-top:6px;font-size:11px;color:var(--ink-2)}
+.flight svg{width:100%;height:auto;display:block}
 .flight .trace{fill:none;stroke:var(--ink-2);stroke-width:1.3;stroke-dasharray:4 4;opacity:.75}
 .flight .trace.today{stroke:var(--clay);stroke-width:2.2;stroke-dasharray:none;opacity:1}
 .ball{animation:fly var(--dur,5s) linear infinite;offset-path:var(--p);offset-rotate:0deg}
@@ -276,60 +287,99 @@ def wind_streaks(angle_deg: float, speed_ms: float, cls: str = "") -> str:
 
 
 def flight_svg(r: dict) -> str:
-    """Side view of the standard fly ball: today's trajectory against the reference
-    atmosphere's. Both balls leave the bat together, so the gap between them is
-    exactly what today's air and wind did."""
+    """Two views of the same flight: the whole arc, and a close-up of the fence.
+    Both panels draw the same path at different scales, so the two balls (today's
+    and the reference atmosphere's) stay in step and split exactly where the
+    weather splits them."""
     e, carry, st = html.escape, r["carry"], r["stadium"]
     if not carry or not carry.get("path_ref"):
         return ""
     ref, today = carry["path_ref"], carry.get("path_cf") or carry["path_ref"]
     cf = next((d for d in carry["directions"] if d["direction"] == "CF"), None)
-    fence = (st.get("fences") or {}).get("cf")
-    W, BASE, TOP, PAD = 880.0, 176.0, 18.0, 16.0
-    max_x = max([p[0] for p in ref] + [p[0] for p in today] + [float(fence or 0) + 4])
-    max_z = max([p[1] for p in ref] + [p[1] for p in today]) or 1.0
-    sx, sz = (W - PAD * 2) / max_x, (BASE - TOP) / max_z
-
-    def d_of(pts):
-        return "M" + " L".join(f"{PAD + x * sx:.1f},{BASE - z * sz:.1f}" for x, z in pts)
-
-    d_ref, d_today = d_of(ref), d_of(today)
+    fence = float((st.get("fences") or {}).get("cf") or 0) or None
     cycle = ((cf or {}).get("hang_time_s") or carry.get("ref_hang_s") or 5.0) * 1.5
+    land_t, land_r = today[-1][0], ref[-1][0]
+    max_x = max(land_t, land_r, (fence or 0) + 4)
+    max_z = max([p[1] for p in ref] + [p[1] for p in today]) or 1.0
 
-    def ball(path_d: str, ghost: bool) -> str:
-        seam = "#9AA3A0" if ghost else "#C0392B"
-        body = ("#FFFFFF", "#8A948F") if ghost else ("#FBFBF8", "#14201B")
-        return (f'<g class="ball{" ghost" if ghost else ""}" style="--p:path(\'{path_d}\');--dur:{cycle:.1f}s">'
-                f'<circle r="13" fill="{body[0]}" stroke="{body[1]}" stroke-width="2.2"/>'
-                f'<path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/>'
-                f'<path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/></g>')
+    def panel(w, base, top, pad, x0, x1, zmax, cls, extra=""):
+        sx, sz = (w - pad * 2) / (x1 - x0), (base - top) / zmax
 
-    parts = [f'<svg viewBox="0 0 {W:.0f} 196" role="img" aria-label="오늘 타구 궤적과 표준 대기 궤적 비교">',
-             f'<line x1="0" y1="{BASE}" x2="{W:.0f}" y2="{BASE}" stroke="var(--line)" stroke-width="1.5"/>']
+        def d_of(pts):
+            return "M" + " L".join(f"{pad + (x - x0) * sx:.1f},{base - z * sz:.1f}" for x, z in pts)
+
+        def ball(path_d, ghost):
+            seam = "#9AA3A0" if ghost else "#C0392B"
+            fill, line = ("#FFFFFF", "#8A948F") if ghost else ("#FBFBF8", "#14201B")
+            return (f'<g class="ball{" ghost" if ghost else ""}" style="--p:path(\'{path_d}\');--dur:{cycle:.1f}s">'
+                    f'<circle r="13" fill="{fill}" stroke="{line}" stroke-width="2.2"/>'
+                    f'<path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/>'
+                    f'<path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/></g>')
+
+        out = [f'<svg class="{cls}" viewBox="0 0 {w:.0f} {base + 20:.0f}" role="img" aria-hidden="true">',
+               f'<line x1="0" y1="{base}" x2="{w:.0f}" y2="{base}" stroke="var(--line)" stroke-width="1.5"/>', extra]
+        if fence:
+            fx = pad + (fence - x0) * sx
+            fh = min(base - top, 2.4 * sz)          # 담장 높이는 자료가 없어 표시용 2.4 m
+            out.append(f'<rect x="{fx - 3:.1f}" y="{base - fh:.1f}" width="6" height="{fh:.1f}" fill="var(--grass)" rx="1.5"/>')
+        out.append(f'<path class="trace" d="{d_of(ref)}"/><path class="trace today" d="{d_of(today)}"/>')
+        out.append(ball(d_of(ref), True) + ball(d_of(today), False) + "</svg>")
+        return "".join(out), sx, pad
+
+    full, _, _ = panel(880, 128, 16, 14, 0.0, max_x, max_z, "full")
+    x0 = max(0.0, (fence or max(land_t, land_r)) - 20.0)
+    x1 = max(land_t, land_r, (fence or 0)) + 5.0
+    zmax = min(max([z for x, z in today + ref if x >= x0] + [4.0]), 8.0)   # 담장이 눌리지 않게 상한
+    marks = []
+    zsx = (880 - 28) / (x1 - x0)
+    for x, label, cls, ly in ((land_t, f"오늘 {land_t:g} m", "today", 164), (land_r, f"표준 {land_r:g} m", "", 180)):
+        mx = 14 + (x - x0) * zsx
+        anchor = "end" if mx > 800 else "middle"
+        marks.append(f'<line class="mark {cls}" x1="{mx:.1f}" y1="148" x2="{mx:.1f}" y2="138"/>'
+                     f'<text class="mlab {cls}" x="{mx:.1f}" y="{ly}" text-anchor="{anchor}">{label}</text>')
     if fence:
-        fx = PAD + float(fence) * sx
-        parts.append(f'<line x1="{fx:.1f}" y1="{BASE}" x2="{fx:.1f}" y2="{BASE - 26:.1f}" stroke="var(--grass)" stroke-width="2.5"/>'
-                     f'<text x="{fx:.1f}" y="192" text-anchor="middle" font-size="11" fill="var(--ink-2)" '
-                     f'font-family="var(--body)">중앙담장 {float(fence):g} m</text>')
-    parts.append(f'<path class="trace" d="{d_ref}"/><path class="trace today" d="{d_today}"/>'
-                 + ball(d_ref, True) + ball(d_today, False) + "</svg>")
+        fx = 14 + (fence - x0) * zsx
+        marks.append(f'<text class="mlab" x="{fx:.1f}" y="{22}" text-anchor="middle">중앙담장 {fence:g} m</text>')
+    zoom, _, _ = panel(880, 148, 26, 14, x0, x1, zmax, "zoom", "".join(marks))
     delta = (cf or {}).get("delta_vs_ref_m") or carry.get("air_only_delta_m") or 0.0
-    if st["dome"]:
-        verdict = "돔 — 공기 무게만 반영"
-    elif delta > 0.5:
-        verdict = "바람이 밀어줌"
-    elif delta < -0.5:
-        verdict = "바람이 붙잡음"
-    else:
-        verdict = "바람 영향 작음"
+    verdict = ("돔 — 공기 무게만 반영" if st["dome"] else
+               "바람이 밀어줌" if delta > 0.5 else "바람이 붙잡음" if delta < -0.5 else "바람 영향 작음")
     lab = (f'<div class="lab"><b>{signed(delta)}</b>'
-           f'<span class="k today"></span>오늘 {today[-1][0]:g} m<br>'
-           f'<span class="k"></span>표준 {ref[-1][0]:g} m<br>{e(verdict)}</div>')
-    return f'<div class="flight">{"".join(parts)}{lab}</div>'
+           f'<span class="k today"></span>오늘 {land_t:g} m<br>'
+           f'<span class="k"></span>표준 {land_r:g} m<br>{e(verdict)}'
+           f'<span class="note">아래는 담장 앞 {int(x1 - x0)} m 확대</span></div>')
+    return f'<div class="flight">{full}{zoom}{lab}</div>'
 
 
 
-TEAMS = {   # 팀 색 + 약칭 (공식 로고 파일 대신 쓰는 마크)
+LOGO_DIR = Path(__file__).resolve().parent.parent / "data" / "logos"
+LOGO_CODES = {"LG": "LG", "두산": "OB", "KT": "KT", "KIA": "HT", "삼성": "SS", "롯데": "LT",
+              "한화": "HH", "NC": "NC", "키움": "WO", "SSG": "SK"}
+
+
+def logo_code(name: str | None) -> str | None:
+    if not name:
+        return None
+    return next((c for k, c in LOGO_CODES.items() if name.upper().startswith(k.upper())), None)
+
+
+@lru_cache(maxsize=None)
+def logo_b64(code: str) -> str:
+    f = LOGO_DIR / f"{code}.png"
+    return base64.b64encode(f.read_bytes()).decode() if f.exists() else ""
+
+
+def logo_css(reports: list[dict]) -> str:
+    """Each team's badge embedded once per page, reused by every card that needs it."""
+    codes = sorted({c for r in reports for n in (r["game"].get("away"), r["game"].get("home"))
+                    if (c := logo_code(n)) and logo_b64(c)})
+    if not codes:
+        return ""
+    return "<style>" + "".join(f".tm-{c}{{background-image:url(data:image/png;base64,{logo_b64(c)})}}"
+                               for c in codes) + "</style>"
+
+
+TEAMS = {   # 로고가 없는 팀(상무 등)용 색 + 약칭
     "LG": ("LG", "#C30452"), "두산": ("두산", "#131230"), "KT": ("kt", "#111111"), "KIA": ("KIA", "#EA0029"),
     "삼성": ("삼성", "#074CA1"), "롯데": ("롯데", "#041E42"), "한화": ("한화", "#FC4E00"), "NC": ("NC", "#315288"),
     "키움": ("키움", "#570514"), "SSG": ("SSG", "#CE0E2D"), "상무": ("상무", "#33503B"),
@@ -339,6 +389,9 @@ TEAMS = {   # 팀 색 + 약칭 (공식 로고 파일 대신 쓰는 마크)
 def team_mark(name: str | None) -> str:
     if not name:
         return ""
+    code = logo_code(name)
+    if code and logo_b64(code):
+        return f'<span class="tm tm-{code}" role="img" aria-label="{html.escape(name)}" title="{html.escape(name)}"></span>'
     key = next((k for k in TEAMS if name.upper().startswith(k.upper())), None)
     if not key:
         return f'<span class="tm" style="--tm-bg:var(--ink-2)">{html.escape(name[:2])}</span>'
@@ -563,7 +616,7 @@ def to_html(day: dict) -> str:
     e = html.escape
     kma_used = any(r["rain"].get("kma") for r in day["reports"])
     parts = [f'<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-             f"<title>KBO 직관 날씨 예보</title>{FONT_LINK}<style>{CSS}</style><main>",
+             f"<title>KBO 직관 날씨 예보</title>{FONT_LINK}<style>{CSS}</style>{logo_css(day['reports'])}<main>",
              '<header class="top"><div class="eyebrow">KBO 직관 날씨 예보</div>',
              f"<h1>{e(date_title(day['date']))} 경기 날씨</h1>",
              f'<p class="stamp">{e(data_stamp(day))}</p>',
