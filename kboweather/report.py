@@ -40,7 +40,7 @@ def game_lines(r: dict) -> list[str]:
     t = r["start"][11:16]
     lines = [f"{rain['verdict_icon']} {t} {st['short']} · {r['label']} — {rain['verdict']}{status_suffix(g)}"]
     q = rain.get("game_mm") or {}
-    lines.append(f"  강수: 경기중 비 {pct(rain['p_rain'])} / 중단 {pct(rain['p_delay'])} / 취소 {pct(rain['p_cancel'])}"
+    lines.append(f"  강수 확률: 경기중 {pct(rain['p_rain'])} / 중단 {pct(rain['p_delay'])} / 취소 {pct(rain['p_cancel'])}"
                  f" · 경기 시간대 누적 {q.get('p50', 0)}mm (상위 10% 시나리오 {q.get('p90', 0)}mm)"
                  f" · 앙상블 {rain['members']}멤버+모델 {len(rain['det'])}개"
                  + (f" · 기상청 강수확률 최고 {rain['kma']['pop_max']}%" if rain.get("kma") else ""))
@@ -94,7 +94,7 @@ def to_telegram_html(day: dict) -> str:
             st, rain, cond, carry = r["stadium"], r["rain"], r["conditions"], r["carry"]
             box = [f"<b>{e(r['start'][11:16])} {e(st['short'])}</b> · {e(r['label'])}{e(status_suffix(r['game']))}",
                    f"{rain['verdict_icon']} {e(rain['verdict'])}",
-                   f"☔ 비 {pct(rain['p_rain'])} · 취소 {pct(rain['p_cancel'])}"]
+                   f"☔ 강수 {pct(rain['p_rain'])} · 취소 {pct(rain['p_cancel'])}"]
             cf = next((x for x in carry["directions"] if x["direction"] == "CF"), None) if carry else None
             if carry and (st["dome"] or st["cf_azimuth"] is None or not cf):
                 box.append(f"⚾ 비거리 {signed(carry['air_only_delta_m'], ' m')}" + (" (돔)" if st["dome"] else ""))
@@ -133,7 +133,12 @@ h2{font:600 24px/1.1 var(--display);margin:34px 0 12px;letter-spacing:.02em;disp
 h2 small{font:500 13px var(--body);color:var(--ink-2)}
 .game{display:grid;grid-template-columns:minmax(150px,1fr) minmax(250px,1.7fr) minmax(220px,1.1fr);gap:12px 26px;
 background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:0 0 12px}
+.game>.rain{grid-column:2/-1}
 .game>details{grid-column:1/-1}
+.carrybox{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:12px;display:grid;
+grid-template-columns:minmax(210px,290px) 1fr;gap:10px 24px;align-items:center}
+.carrybox .flight{grid-column:auto;border-top:0;margin-top:0;padding-top:0}
+@media(max-width:760px){.carrybox{grid-template-columns:1fr}}
 @media(max-width:760px){.game{grid-template-columns:1fr}}
 .time{font:700 36px/1 var(--display);font-variant-numeric:tabular-nums}
 .venue{font:600 19px/1.2 var(--display);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -147,7 +152,7 @@ background:var(--surface);border:1px solid var(--line);border-radius:6px;padding
 .meters{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
 .meter{display:grid;grid-template-columns:1fr auto;align-items:baseline;row-gap:5px}
 .meter .lbl{font-size:12px;color:var(--ink-2)}
-.meter .val{font:600 22px/1 var(--display);font-variant-numeric:tabular-nums}
+.meter .val{font:700 27px/1 var(--display);font-variant-numeric:tabular-nums}
 .meter i{grid-column:1/-1;display:block;height:6px;background:var(--surface-2);border-radius:3px;position:relative;overflow:hidden}
 .meter i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--rain);border-radius:3px}
 .fine{font-size:12px;color:var(--ink-2);margin-top:8px}
@@ -190,7 +195,7 @@ font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:po
 @keyframes drift{0%{transform:translateX(-46px);opacity:0}20%{opacity:.5}80%{opacity:.5}100%{transform:translateX(46px);opacity:0}}
 @keyframes fly{0%{offset-distance:0%}70%{offset-distance:100%}100%{offset-distance:100%}}
 @keyframes rainfall{to{background-position:0 46px}}
-.streak{stroke:var(--clay);stroke-width:2;stroke-linecap:round;opacity:0;animation:drift var(--dur,3s) linear infinite var(--delay,0s)}
+.streak{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0;animation:drift var(--dur,3s) linear infinite var(--delay,0s)}
 .flight{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:2px;padding-top:10px;display:grid;grid-template-columns:1fr 132px;gap:12px;align-items:center}
 .flight svg{width:100%;height:104px;display:block;overflow:visible}
 .flight .trace{fill:none;stroke:var(--ink-2);stroke-width:1.3;stroke-dasharray:4 4;opacity:.75}
@@ -204,7 +209,8 @@ font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:po
 .play .stage{position:relative;height:168px;display:grid;place-items:center;overflow:hidden;border-radius:8px;background:linear-gradient(160deg,var(--surface-2),var(--surface))}
 .play .plane{width:188px;height:188px;transform:perspective(560px) rotateX(50deg);transform-origin:50% 50%}
 .play .plane svg{width:188px;height:188px;display:block}
-.play .windrose{transform:rotate(var(--to,0deg));transform-origin:50px 50px;transition:transform .6s ease}
+.play .windrose{transform:rotate(var(--to,0deg));transform-origin:50px 50px;transition:transform .12s linear}
+.pnote{font-size:11.5px;color:var(--ink-2);margin-top:2px}
 .play .rain{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s;
 background-image:repeating-linear-gradient(74deg,var(--rain) 0 1px,transparent 1px 9px);animation:rainfall .8s linear infinite}
 .play .controls{display:grid;gap:9px;justify-items:start}
@@ -247,8 +253,8 @@ def field_svg(st: dict, cond: dict, carry: dict | None, streaks: bool = False) -
         dx, dy = math.sin(to), -math.cos(to)
         x1, y1 = 50 - dx * length / 2, 50 - dy * length / 2
         x2, y2 = 50 + dx * length / 2, 50 + dy * length / 2
-        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="var(--clay)" stroke-width="3" stroke-linecap="round"/>'
-                     f'<polygon points="0,-5 9,0 0,5" fill="var(--clay)" transform="translate({x2:.1f},{y2:.1f}) rotate({math.degrees(math.atan2(dy, dx)):.0f})"/>')
+        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="var(--rain)" stroke-width="3" stroke-linecap="round"/>'
+                     f'<polygon points="0,-5 9,0 0,5" fill="var(--rain)" transform="translate({x2:.1f},{y2:.1f}) rotate({math.degrees(math.atan2(dy, dx)):.0f})"/>')
         parts.append(wind_streaks(math.degrees(math.atan2(dy, dx)), spd))
     if streaks and not dome:
         parts.append(wind_streaks(0.0, 3.0))     # 방향·속도는 재생 스크립트가 CSS 변수로 바꿈
@@ -371,7 +377,7 @@ def game_card(r: dict, folds: bool = True) -> str:
 
     meters = "".join(
         f'<div class="meter"><span class="lbl">{k}</span><span class="val">{pct(v)}</span><i style="--w:{round((v or 0) * 100)}%"></i></div>'
-        for k, v in (("경기 중 비", rain["p_rain"]), ("중단 가능", rain["p_delay"]), ("취소 가능", rain["p_cancel"])))
+        for k, v in (("경기중 강수 확률", rain["p_rain"]), ("중단 확률", rain["p_delay"]), ("취소 확률", rain["p_cancel"])))
     rainblock = (f'<div class="rain"><div class="verdict {_vclass(rain["verdict_icon"])}">{e(rain["verdict"])}</div>'
                  f'<div class="meters">{meters}</div>'
                  f'<div class="fine">경기창 {rain["window"][0]}–{rain["window"][1]} · 강수 중앙값 {q.get("p50", 0)} mm / 상위 10 % {q.get("p90", 0)} mm'
@@ -422,12 +428,15 @@ def game_card(r: dict, folds: bool = True) -> str:
                 '<div class="rain" aria-hidden="true"></div></div>'
                 '<div class="controls"><button type="button" class="pbtn">▶ 재생</button>'
                 f'<input type="range" class="scrub" min="0" max="{len(pdata) - 1}" step="1" value="0" aria-label="시간 선택">'
-                '<div class="rvals"></div></div></div>')
+                '<div class="rvals"></div>'
+                '<div class="pnote">예보는 1시간 단위 · 사이 시간은 앞뒤 값을 이어서 그립니다</div></div></div>')
         hours = (f'<details><summary>시간대별 · {len(r["hourly"])}시간</summary>{play}<div class="wrap"><table>'
                  '<tr><th>시각</th><th>기온 ℃</th><th>체감 ℃</th><th>습도 %</th><th>강수 중앙/최대 mm</th><th>비 확률 (앙상블)</th><th>모델 POP</th><th>기상청 POP</th><th>바람 m/s</th><th>구름 %</th></tr>'
                  + "".join(rows) + "</table></div></details>")
 
-    return f'<article class="game">{match}{rainblock}{fieldblock}{flight_svg(r)}{explain(r) + hours if folds else ""}</article>'
+    carrybox = f'<div class="carrybox">{fieldblock}{flight_svg(r)}</div>'
+    return (f'<article class="game">{match}{rainblock}'
+            + (explain(r) + hours if folds else "") + carrybox + "</article>")
 
 
 LEAGUES = ((1, "1군", "kbo"), (2, "퓨처스", "futures"))
@@ -462,32 +471,54 @@ TAB_JS = """<script>
 
 PLAY_JS = """<script>
 (function () {
+  var STEPS = 12;                       // 한 시간을 12칸(5분)으로 나눠 부드럽게 이어 그림
   document.querySelectorAll(".play").forEach(function (box) {
     var hours = [];
     try { hours = JSON.parse(box.dataset.hours || "[]"); } catch (e) { return; }
     if (!hours.length) return;
     var rose = box.querySelector(".windrose"), rain = box.querySelector(".rain"),
         btn = box.querySelector(".pbtn"), scrub = box.querySelector(".scrub"),
-        out = box.querySelector(".rvals"), timer = null, i = 0;
-    function show(n) {
-      i = Math.max(0, Math.min(hours.length - 1, n));
-      var h = hours[i];
-      scrub.value = i;
+        out = box.querySelector(".rvals"), last = hours.length - 1,
+        frames = last * STEPS, timer = null, f = 0, angle = null, shown = null;
+    scrub.max = Math.max(frames, 1);
+    function lerp(a, b, u) { return a + (b - a) * u; }
+    function at(frame) {                 // 앞뒤 시간값을 섞어 그 사이 값을 만든다
+      var i = Math.min(last, Math.floor(frame / STEPS)), u = (frame - i * STEPS) / STEPS,
+          a = hours[i], b = hours[Math.min(last, i + 1)];
+      var ax = a.spd * Math.cos(a.dir * Math.PI / 180), ay = a.spd * Math.sin(a.dir * Math.PI / 180),
+          bx = b.spd * Math.cos(b.dir * Math.PI / 180), by = b.spd * Math.sin(b.dir * Math.PI / 180),
+          x = lerp(ax, bx, u), y = lerp(ay, by, u);
+      var mins = Math.round((+a.t.slice(0, 2) * 60 + +a.t.slice(3)) + u * 60);
+      return {t: ("0" + Math.floor(mins / 60) % 24).slice(-2) + ":" + ("0" + mins % 60).slice(-2),
+              temp: lerp(a.temp, b.temp, u), rh: lerp(a.rh == null ? 0 : a.rh, b.rh == null ? 0 : b.rh, u),
+              p: lerp(a.p, b.p, u), spd: Math.hypot(x, y),
+              dir: (Math.atan2(y, x) * 180 / Math.PI + 360) % 360, comp: u < .5 ? a.comp : b.comp};
+    }
+    function show(frame) {
+      f = Math.max(0, Math.min(frames, frame));
+      var h = at(f);
+      scrub.value = f;
       if (rose) {
-        rose.style.setProperty("--to", ((h.dir + 180) % 360 - 90) + "deg");
+        var target = (h.dir + 180) % 360 - 90;
+        if (angle === null) { angle = target; }
+        else { angle += ((target - angle + 540) % 360) - 180; }   // 짧은 쪽으로 돌린다
+        rose.style.setProperty("--to", angle.toFixed(1) + "deg");
         var dur = Math.max(1.1, Math.min(6, 14 / Math.max(h.spd, 0.3))).toFixed(1) + "s";
-        box.querySelectorAll(".streak").forEach(function (l) { l.style.setProperty("--dur", dur); });
+        if (dur !== shown) {
+          shown = dur;
+          box.querySelectorAll(".streak").forEach(function (l) { l.style.setProperty("--dur", dur); });
+        }
       }
       if (rain) rain.style.opacity = h.p > 0.02 ? Math.min(0.8, 0.12 + h.p) : 0;
-      out.innerHTML = "<b>" + h.t + "</b> · " + h.temp + "\u2103 · 습도 " + (h.rh == null ? "-" : h.rh)
+      out.innerHTML = "<b>" + h.t + "</b> · " + h.temp.toFixed(1) + "\u2103 · 습도 " + Math.round(h.rh)
         + "% · 비 확률 " + Math.round(h.p * 100) + "% · " + h.comp + "풍 " + h.spd.toFixed(1) + " m/s";
     }
     function stop() { clearInterval(timer); timer = null; btn.textContent = "▶ 재생"; }
     btn.addEventListener("click", function () {
       if (timer) { stop(); return; }
-      if (i >= hours.length - 1) show(0);
+      if (f >= frames) show(0);
       btn.textContent = "❚❚ 멈춤";
-      timer = setInterval(function () { if (i >= hours.length - 1) { stop(); } else { show(i + 1); } }, 1400);
+      timer = setInterval(function () { if (f >= frames) { stop(); } else { show(f + 1); } }, 110);
     });
     scrub.addEventListener("input", function () { stop(); show(+scrub.value); });
     show(0);

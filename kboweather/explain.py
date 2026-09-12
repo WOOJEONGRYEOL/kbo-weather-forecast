@@ -76,7 +76,7 @@ def rain_text(r: dict) -> str:
         w, lead = (rain.get("weights") or {}).get("kma", 0), rain.get("lead_h")
         if w and lead is not None and lead >= 0:
             out.append(f"경기까지 약 {max(1, round(lead))}시간 남아 기상청 예보를 {round(w * 100)} % 비중으로 반영했습니다.")
-            out.append(f"그래서 최종 '경기 중 비' 확률은 {_pct(rain['p_rain'])}입니다.")
+            out.append(f"그래서 최종 '경기중 강수 확률'은 {_pct(rain['p_rain'])}입니다.")
     pre = rain.get("pre_mm_p50") or 0.0
     if pre >= th["wet_pre"] * 0.5:
         out.append(f"경기 전 6시간 동안에도 비가 {pre:g} mm(중앙값) 내려 그라운드 상태가 변수입니다.")

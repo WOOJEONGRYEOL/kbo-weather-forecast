@@ -1,0 +1,28 @@
+# 공유용 대시보드: out/ 의 리포트를 GitHub Pages 로 배포.
+# 맥이나 GitHub 백업이 새 리포트를 커밋해 푸시하면 자동으로 갱신된다.
+name: Dashboard pages
+on:
+  push:
+    branches: [main]
+    paths: ["out/**.html", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: out }
+      - id: deploy
+        uses: actions/deploy-pages@v4

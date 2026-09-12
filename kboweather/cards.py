@@ -115,7 +115,7 @@ def make(day: dict, reports: list[dict], out_dir: Path) -> list[Path]:
 def caption(r: dict) -> str:
     """The one line under each card — this is what the phone notification shows."""
     e, rain, carry, st = html.escape, r["rain"], r["carry"], r["stadium"]
-    bits = [f"비 {report.pct(rain['p_rain'])}"]
+    bits = [f"강수 {report.pct(rain['p_rain'])}"]
     if rain["p_cancel"] >= 0.05:
         bits.append(f"취소 {report.pct(rain['p_cancel'])}")
     cf = next((x for x in carry["directions"] if x["direction"] == "CF"), None) if carry else None
