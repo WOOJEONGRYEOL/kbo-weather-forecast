@@ -42,7 +42,7 @@ def _title(day: dict) -> str:
 
 def card_doc(day: dict, r: dict) -> str:
     e = html.escape
-    return (f'<!doctype html><html data-theme="light"><meta charset="utf-8">{report.FONT_LINK}'
+    return (f'<!doctype html><html data-theme="light" class="static"><meta charset="utf-8">{report.FONT_LINK}'
             f'<style>{report.CSS}{EXTRA_CSS}</style><div class="sheet">'
             f'<div class="cap"><b>{e(_title(day))}</b><span>{e(r["league_name"])}</span></div>'
             f'{report.game_card(r, folds=False)}<p class="stamp">{e(report.data_stamp(day))}</p></div></html>')
@@ -112,29 +112,34 @@ def make(day: dict, reports: list[dict], out_dir: Path) -> list[Path]:
             for i, r in enumerate(reports, 1)]
 
 
-def caption(day: dict, rs: list[dict], name: str) -> str:
-    return (f"⚾ <b>{html.escape(_title(day))} KBO {name}</b> · {len(rs)}경기\n"
-            f"{html.escape(report.league_summary(rs).split(' · ', 1)[-1])}\n"
-            f"<i>{html.escape(report.data_stamp(day))}</i>")
+def caption(r: dict) -> str:
+    """The one line under each card — this is what the phone notification shows."""
+    e, rain, carry, st = html.escape, r["rain"], r["carry"], r["stadium"]
+    bits = [f"비 {report.pct(rain['p_rain'])}"]
+    if rain["p_cancel"] >= 0.05:
+        bits.append(f"취소 {report.pct(rain['p_cancel'])}")
+    cf = next((x for x in carry["directions"] if x["direction"] == "CF"), None) if carry else None
+    if cf and not st["dome"] and st["cf_azimuth"] is not None:
+        bits.append(f"비거리 {report.signed(cf['delta_vs_ref_m'], ' m')}")
+    if r["heat"].get("level") not in (None, "ok", "unknown"):
+        bits.append(f"체감 {r['heat']['max_apparent']}℃")
+    return (f"⚾ <b>{e(r['start'][11:16])} {e(st['short'])}</b> · {e(r['label'])} — {e(rain['verdict'])}\n"
+            f"{e(' · '.join(bits))}")
 
 
 def send_briefing(s, day: dict, reports: list[dict] | None = None, story: str | None = None) -> str:
-    """Render every card first, then send one album per league; text version if rendering fails."""
-    reports = day["reports"] if reports is None else reports
-    if not reports:
-        return "보낼 경기 없음"
+    """One message per game card. 1군 only unless `telegram_leagues` says otherwise."""
+    leagues = tuple(getattr(s, "telegram_leagues", (1,)))
+    rs = [r for r in (day["reports"] if reports is None else reports) if r["game"]["league"] in leagues]
+    if not rs:
+        return "보낼 경기 없음(텔레그램 대상 리그 기준)"
     try:
-        albums = []
-        for le, name, _ in report.LEAGUES:
-            rs = [r for r in reports if r["game"]["league"] == le]
-            if rs:
-                albums.append((make(day, rs, s.out_dir), caption(day, rs, name)))
+        pngs = make(day, rs, s.out_dir)
     except Exception as e:  # never lose the briefing over a rendering problem
-        notify.telegram(s.telegram_token, s.telegram_chat_id, report.to_telegram_html({**day, "reports": reports}))
+        notify.telegram(s.telegram_token, s.telegram_chat_id, report.to_telegram_html({**day, "reports": rs}))
         return f"텔레그램 텍스트 전송 (카드 실패: {str(e).splitlines()[0][:80]})"
     if story:
-        albums[0] = (albums[0][0], "🎙 " + html.escape(story[:400]) + "\n\n" + albums[0][1])
-    for pngs, cap in albums:
-        for i in range(0, len(pngs), 10):          # an album holds at most 10 photos
-            notify.telegram_photos(s.telegram_token, s.telegram_chat_id, pngs[i:i + 10], cap[:1024] if i == 0 else "")
-    return f"텔레그램 카드 {sum(len(p) for p, _ in albums)}장 전송"
+        notify.telegram(s.telegram_token, s.telegram_chat_id, "🎙 " + html.escape(story[:900]))
+    for r, png in zip(rs, pngs):
+        notify.telegram_photos(s.telegram_token, s.telegram_chat_id, [png], caption(r)[:1024])
+    return f"텔레그램 카드 {len(pngs)}장 각각 전송"

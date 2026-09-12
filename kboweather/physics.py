@@ -67,10 +67,11 @@ class Flight:
     hang_time_s: float
     apex_m: float
     lateral_m: float
+    path: tuple = ()          # (수평 거리, 높이) 표본 — 대시보드 궤적 그림용
 
 
 def fly(launch: Launch, rho: float, tail_ms: float = 0.0, cross_ms: float = 0.0,
-        dt: float = 0.004) -> Flight:
+        dt: float = 0.004, trace: bool = False) -> Flight:
     """Integrate one batted ball until it returns to ground level (z = 0)."""
     omega = launch.backspin_rpm * 2.0 * math.pi / 60.0      # rad/s
     cd = CD0 + CDSPIN * (launch.backspin_rpm / 1000.0)
@@ -96,6 +97,8 @@ def fly(launch: Launch, rho: float, tail_ms: float = 0.0, cross_ms: float = 0.0,
 
     t = 0.0
     apex = z
+    step = 0
+    path = [(0.0, z)] if trace else []
     while True:
         # RK4 step on (pos, vel)
         a1 = accel(vx, vy, vz)
@@ -122,9 +125,15 @@ def fly(launch: Launch, rho: float, tail_ms: float = 0.0, cross_ms: float = 0.0,
             break
         x, y, z = nx, ny, nz
         apex = max(apex, z)
+        step += 1
+        if trace and step % 25 == 0:
+            path.append((math.hypot(x, y), z))
         if t > 20.0:
             break
-    return Flight(distance_m=math.hypot(x, y), hang_time_s=t, apex_m=apex, lateral_m=y)
+    if trace:
+        path.append((math.hypot(x, y), 0.0))
+    return Flight(distance_m=math.hypot(x, y), hang_time_s=t, apex_m=apex, lateral_m=y,
+                  path=tuple((round(a, 1), round(b, 2)) for a, b in path))
 
 
 # ---- wind geometry ------------------------------------------------------------
@@ -160,8 +169,8 @@ def carry_report(temp_c: float, pressure_station_hpa: float, rh_pct: float,
     `shelter` scales the ambient 10 m wind to what the ball actually feels
     inside the bowl (0 = dome, ~0.55 enclosed stadium, ~0.85 open field)."""
     rho = air_density(temp_c, pressure_station_hpa, rh_pct)
-    ref = fly(launch, REF_DENSITY)
-    calm = fly(launch, rho)
+    ref = fly(launch, REF_DENSITY, trace=True)
+    calm = fly(launch, rho, trace=True)
     out = {
         "air_density": round(rho, 4),
         "ref_density": round(REF_DENSITY, 4),
@@ -170,6 +179,8 @@ def carry_report(temp_c: float, pressure_station_hpa: float, rh_pct: float,
         "calm_distance_m": round(calm.distance_m, 1),
         "air_only_delta_m": round(calm.distance_m - ref.distance_m, 1),
         "effective_wind_ms": round(wind_speed_ms * shelter, 2),
+        "path_ref": list(ref.path),      # 표준 대기 궤적 (비교선)
+        "path_cf": list(calm.path),      # 중앙 방향 오늘 궤적 (바람 반영 시 아래에서 교체)
         "directions": [],
     }
     if cf_azimuth_deg is None or wind_from_deg is None:
@@ -182,7 +193,9 @@ def carry_report(temp_c: float, pressure_station_hpa: float, rh_pct: float,
     for name, off in (("LF", -45.0), ("CF", 0.0), ("RF", 45.0)):
         bearing = (cf_azimuth_deg + off) % 360.0
         tail, cross = wind_components(w, wind_from_deg, bearing)
-        f = fly(launch, rho, tail, cross)
+        f = fly(launch, rho, tail, cross, trace=(name == 'CF'))
+        if name == 'CF':
+            out['path_cf'] = list(f.path)
         out["directions"].append(CarryResult(name, round(bearing, 1), round(f.distance_m, 1),
                                              round(f.distance_m - ref.distance_m, 1),
                                              round(tail, 2), round(cross, 2),

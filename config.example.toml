@@ -12,6 +12,9 @@
 # 기상청 단기예보 조회서비스 (공공데이터포털 일반 인증키 — 무료, 자동승인)
 # kma_service_key = "..."
 
+# 텔레그램으로 보낼 리그 (기본: 1군만). 퓨처스까지 보내려면 [1, 2]
+# telegram_leagues = [1]
+
 # 로컬 LLM 캐스터 멘트 (--narrate)
 ollama_host = "http://localhost:11434"
 ollama_model = "gemma4:12b"      # exaone3.5:2.4b 가 더 빠르고 한국어 자연스러움

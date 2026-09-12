@@ -65,6 +65,7 @@ def _emit(day: dict, s, args) -> int:
     if getattr(args, "html", False) or True:
         html_path = stem.with_suffix(".html")
         html_path.write_text(report.to_html(day), "utf-8")
+        (out_dir / "latest.html").write_text(report.to_html(day), "utf-8")
     text = md
     if getattr(args, "narrate", False):
         story = narrate.ollama(day, s.ollama_host, s.ollama_model)

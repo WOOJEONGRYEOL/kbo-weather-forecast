@@ -54,6 +54,7 @@ def run(runner: str, force: bool = False, plan: bool = False, now: dt.datetime |
     stem.with_suffix(".json").write_text(json.dumps(day, ensure_ascii=False, indent=1), "utf-8")
     stem.with_suffix(".md").write_text(report.to_markdown(day), "utf-8")
     stem.with_suffix(".html").write_text(report.to_html(day), "utf-8")
+    (s.out_dir / "latest.html").write_text(report.to_html(day), "utf-8")
 
     upcoming = [r for r in day["reports"] if (r["rain"].get("lead_h") or 0) > 0]   # message: games not yet started
     if not (s.telegram_token and s.telegram_chat_id):

@@ -83,7 +83,7 @@ Brier 점수 1군 0.029 (기후값 0.057), 퓨처스 0.077 (기후값 0.129). 1�
 |---|---|---|
 | 1순위: 맥에서 매일 08:30·15:30 | `scripts/com.woo.kboweather.plist` → `~/Library/LaunchAgents/` (`scripts/run_auto.sh` 실행) | 0 |
 | 백업: GitHub Actions 10:00·16:15 | `.github/workflows/daily.yml` (Secrets 에 `KMA_SERVICE_KEY`, 선택 텔레그램) | 0 (private 저장소 무료 월 2,000분 중 월 수십 분) |
-| 텔레그램 카드 | 경기마다 대시보드 카드 이미지 1장(접는 부분 제외) + 기상 데이터 업데이트 시각, 리그별 앨범으로 전송. 맥은 WebKit(`scripts/webshot.swift`, 처음 한 번 컴파일), GitHub 은 Chrome 으로 그리고, 둘 다 안 되면 글자 버전. `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (또는 `config.toml`) | 0 |
+| 텔레그램 카드 | 경기마다 대시보드 카드 이미지 1장(접는 부분 제외) + 기상 데이터 업데이트 시각. 경기마다 한 장씩 따로 전송(기본 1군만, `telegram_leagues = [1, 2]` 면 퓨처스도). 맥은 WebKit(`scripts/webshot.swift`, 처음 한 번 컴파일), GitHub 은 Chrome 으로 그리고, 둘 다 안 되면 글자 버전. `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (또는 `config.toml`) | 0 |
 | 캐스터 멘트 | `--narrate` → Ollama `gemma4:12b` (또는 `exaone3.5:2.4b`) | 0 (로컬) |
 | 음성 | `--speak` → `say -v Yuna` → `out/…-brief.m4a` | 0 |
 
