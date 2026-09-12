@@ -64,7 +64,7 @@ def game_lines(r: dict) -> list[str]:
 
 
 def to_markdown(day: dict) -> str:
-    out = [f"⚾ KBO 구장별 기상 브리핑 — {date_title(day['date'])}", ""]
+    out = [f"⚾ KBO 직관 날씨 예보 — {date_title(day['date'])}", ""]
     for league, name in ((1, "1군"), (2, "퓨처스")):
         rs = [r for r in day["reports"] if r["game"]["league"] == league]
         if not rs:
@@ -84,7 +84,7 @@ def to_telegram_html(day: dict) -> str:
     """Text fallback when card images can't be made: one <blockquote> box per game."""
     e = html.escape
     d = dt.date.fromisoformat(day["date"])
-    out = [f"⚾ <b>{d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]}) KBO 구장 날씨</b>", f"<i>{e(data_stamp(day))}</i>"]
+    out = [f"⚾ <b>KBO 직관 날씨 예보 · {d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]})</b>", f"<i>{e(data_stamp(day))}</i>"]
     for le, name, _ in LEAGUES:
         rs = [r for r in day["reports"] if r["game"]["league"] == le]
         if not rs:
@@ -136,7 +136,7 @@ background:var(--surface);border:1px solid var(--line);border-radius:6px;padding
 .game>.rain{grid-column:2/-1}
 .game>details{grid-column:1/-1}
 .carrybox{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:12px;display:grid;
-grid-template-columns:minmax(210px,290px) 1fr;gap:10px 24px;align-items:center}
+grid-template-columns:1fr;gap:12px;align-items:center}
 .carrybox .flight{grid-column:auto;border-top:0;margin-top:0;padding-top:0}
 @media(max-width:760px){.carrybox{grid-template-columns:1fr}}
 @media(max-width:760px){.game{grid-template-columns:1fr}}
@@ -144,7 +144,10 @@ grid-template-columns:minmax(210px,290px) 1fr;gap:10px 24px;align-items:center}
 .venue{font:600 19px/1.2 var(--display);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tag{font:500 11px/1 var(--body);letter-spacing:.08em;border:1px solid var(--line);border-radius:3px;padding:3px 6px;color:var(--ink-2);white-space:nowrap}
 .tag.kbo{color:var(--ink);border-color:var(--ink-2)}
-.teams{margin-top:6px;font-weight:500}
+.teams{margin-top:7px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tm{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;flex:none;
+font:700 10.5px/1 var(--body);letter-spacing:-.03em;color:#fff;background:var(--tm-bg,#555);
+box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
 .meta{color:var(--ink-2);font-size:12.5px;margin-top:2px}
 .verdict{font-weight:600;display:flex;align-items:center;gap:8px}
 .verdict::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--ok)}
@@ -197,10 +200,12 @@ font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:po
 @keyframes rainfall{to{background-position:0 46px}}
 .streak{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0;animation:drift var(--dur,3s) linear infinite var(--delay,0s)}
 .flight{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:2px;padding-top:10px;display:grid;grid-template-columns:1fr 132px;gap:12px;align-items:center}
-.flight svg{width:100%;height:104px;display:block;overflow:visible}
+.flight svg{width:100%;height:auto;aspect-ratio:880/196;display:block;overflow:visible}
 .flight .trace{fill:none;stroke:var(--ink-2);stroke-width:1.3;stroke-dasharray:4 4;opacity:.75}
 .flight .trace.today{stroke:var(--clay);stroke-width:2.2;stroke-dasharray:none;opacity:1}
 .ball{animation:fly var(--dur,5s) linear infinite;offset-path:var(--p);offset-rotate:0deg}
+.ball.ghost{opacity:.6}
+.ball.ghost circle{stroke-dasharray:3.5 3}
 .flight .lab{font-size:12px;color:var(--ink-2);line-height:1.6}
 .flight .lab b{display:block;font:700 17px/1.2 var(--display);color:var(--ink);margin-bottom:2px}
 .flight .k{display:inline-block;width:12px;height:0;border-top:2px solid var(--ink-2);vertical-align:middle;margin-right:6px}
@@ -253,8 +258,8 @@ def field_svg(st: dict, cond: dict, carry: dict | None, streaks: bool = False) -
         dx, dy = math.sin(to), -math.cos(to)
         x1, y1 = 50 - dx * length / 2, 50 - dy * length / 2
         x2, y2 = 50 + dx * length / 2, 50 + dy * length / 2
-        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="var(--rain)" stroke-width="3" stroke-linecap="round"/>'
-                     f'<polygon points="0,-5 9,0 0,5" fill="var(--rain)" transform="translate({x2:.1f},{y2:.1f}) rotate({math.degrees(math.atan2(dy, dx)):.0f})"/>')
+        parts.append(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="var(--clay)" stroke-width="3" stroke-linecap="round"/>'
+                     f'<polygon points="0,-5 9,0 0,5" fill="var(--clay)" transform="translate({x2:.1f},{y2:.1f}) rotate({math.degrees(math.atan2(dy, dx)):.0f})"/>')
         parts.append(wind_streaks(math.degrees(math.atan2(dy, dx)), spd))
     if streaks and not dome:
         parts.append(wind_streaks(0.0, 3.0))     # 방향·속도는 재생 스크립트가 CSS 변수로 바꿈
@@ -271,15 +276,16 @@ def wind_streaks(angle_deg: float, speed_ms: float, cls: str = "") -> str:
 
 
 def flight_svg(r: dict) -> str:
-    """Side view of the standard fly ball: today's trajectory over the reference
-    atmosphere's, with the park's center-field fence marked."""
+    """Side view of the standard fly ball: today's trajectory against the reference
+    atmosphere's. Both balls leave the bat together, so the gap between them is
+    exactly what today's air and wind did."""
     e, carry, st = html.escape, r["carry"], r["stadium"]
     if not carry or not carry.get("path_ref"):
         return ""
     ref, today = carry["path_ref"], carry.get("path_cf") or carry["path_ref"]
     cf = next((d for d in carry["directions"] if d["direction"] == "CF"), None)
     fence = (st.get("fences") or {}).get("cf")
-    W, BASE, TOP, PAD = 320.0, 88.0, 10.0, 6.0
+    W, BASE, TOP, PAD = 880.0, 176.0, 18.0, 16.0
     max_x = max([p[0] for p in ref] + [p[0] for p in today] + [float(fence or 0) + 4])
     max_z = max([p[1] for p in ref] + [p[1] for p in today]) or 1.0
     sx, sz = (W - PAD * 2) / max_x, (BASE - TOP) / max_z
@@ -288,17 +294,25 @@ def flight_svg(r: dict) -> str:
         return "M" + " L".join(f"{PAD + x * sx:.1f},{BASE - z * sz:.1f}" for x, z in pts)
 
     d_ref, d_today = d_of(ref), d_of(today)
-    hang = (cf or {}).get("hang_time_s") or 5.0
-    parts = [f'<svg viewBox="0 0 {W:.0f} 100" role="img" aria-label="타구 궤적 비교">',
+    cycle = ((cf or {}).get("hang_time_s") or carry.get("ref_hang_s") or 5.0) * 1.5
+
+    def ball(path_d: str, ghost: bool) -> str:
+        seam = "#9AA3A0" if ghost else "#C0392B"
+        body = ("#FFFFFF", "#8A948F") if ghost else ("#FBFBF8", "#14201B")
+        return (f'<g class="ball{" ghost" if ghost else ""}" style="--p:path(\'{path_d}\');--dur:{cycle:.1f}s">'
+                f'<circle r="13" fill="{body[0]}" stroke="{body[1]}" stroke-width="2.2"/>'
+                f'<path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/>'
+                f'<path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/></g>')
+
+    parts = [f'<svg viewBox="0 0 {W:.0f} 196" role="img" aria-label="오늘 타구 궤적과 표준 대기 궤적 비교">',
              f'<line x1="0" y1="{BASE}" x2="{W:.0f}" y2="{BASE}" stroke="var(--line)" stroke-width="1.5"/>']
     if fence:
         fx = PAD + float(fence) * sx
-        parts.append(f'<line x1="{fx:.1f}" y1="{BASE}" x2="{fx:.1f}" y2="{BASE - 16:.1f}" stroke="var(--grass)" stroke-width="2"/>'
-                     f'<text x="{fx:.1f}" y="99" text-anchor="middle" font-size="9.5" fill="var(--ink-2)" '
-                     f'font-family="var(--body)">담장 {float(fence):g} m</text>')
+        parts.append(f'<line x1="{fx:.1f}" y1="{BASE}" x2="{fx:.1f}" y2="{BASE - 26:.1f}" stroke="var(--grass)" stroke-width="2.5"/>'
+                     f'<text x="{fx:.1f}" y="192" text-anchor="middle" font-size="11" fill="var(--ink-2)" '
+                     f'font-family="var(--body)">중앙담장 {float(fence):g} m</text>')
     parts.append(f'<path class="trace" d="{d_ref}"/><path class="trace today" d="{d_today}"/>'
-                 f'<circle class="ball" r="3.4" fill="var(--clay)" style="--p:path(\'{d_today}\');--dur:{hang * 1.45:.1f}s"/>'
-                 f'<circle class="ball" r="2.6" fill="var(--ink-2)" opacity=".45" style="--p:path(\'{d_ref}\');--dur:{hang * 1.45:.1f}s"/></svg>')
+                 + ball(d_ref, True) + ball(d_today, False) + "</svg>")
     delta = (cf or {}).get("delta_vs_ref_m") or carry.get("air_only_delta_m") or 0.0
     if st["dome"]:
         verdict = "돔 — 공기 무게만 반영"
@@ -312,6 +326,24 @@ def flight_svg(r: dict) -> str:
            f'<span class="k today"></span>오늘 {today[-1][0]:g} m<br>'
            f'<span class="k"></span>표준 {ref[-1][0]:g} m<br>{e(verdict)}</div>')
     return f'<div class="flight">{"".join(parts)}{lab}</div>'
+
+
+
+TEAMS = {   # 팀 색 + 약칭 (공식 로고 파일 대신 쓰는 마크)
+    "LG": ("LG", "#C30452"), "두산": ("두산", "#131230"), "KT": ("kt", "#111111"), "KIA": ("KIA", "#EA0029"),
+    "삼성": ("삼성", "#074CA1"), "롯데": ("롯데", "#041E42"), "한화": ("한화", "#FC4E00"), "NC": ("NC", "#315288"),
+    "키움": ("키움", "#570514"), "SSG": ("SSG", "#CE0E2D"), "상무": ("상무", "#33503B"),
+}
+
+
+def team_mark(name: str | None) -> str:
+    if not name:
+        return ""
+    key = next((k for k in TEAMS if name.upper().startswith(k.upper())), None)
+    if not key:
+        return f'<span class="tm" style="--tm-bg:var(--ink-2)">{html.escape(name[:2])}</span>'
+    label, bg = TEAMS[key]
+    return f'<span class="tm" style="--tm-bg:{bg}" title="{html.escape(name)}">{html.escape(label)}</span>'
 
 
 def _vclass(icon: str) -> str:
@@ -372,7 +404,7 @@ def game_card(r: dict, folds: bool = True) -> str:
     match = (f'<div class="match"><div class="time">{e(r["start"][11:16])}</div>'
              f'<div class="venue">{e(st["short"])}<span class="tag">{e(r["league_name"])}</span>'
              + (f'<span class="tag kbo">{e(status)}</span>' if status else "") + "</div>"
-             f'<div class="teams">{e(r["label"])}</div>'
+             f'<div class="teams">{team_mark(g.get("away"))}<span>{e(r["label"])}</span>{team_mark(g.get("home"))}</div>'
              f'<div class="meta">{e(st["name"])}{(" · " + starters) if starters else ""}</div></div>')
 
     meters = "".join(
@@ -531,8 +563,8 @@ def to_html(day: dict) -> str:
     e = html.escape
     kma_used = any(r["rain"].get("kma") for r in day["reports"])
     parts = [f'<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-             f"<title>KBO 구장 기상 브리핑</title>{FONT_LINK}<style>{CSS}</style><main>",
-             '<header class="top"><div class="eyebrow">KBO · 구장 핀포인트 기상</div>',
+             f"<title>KBO 직관 날씨 예보</title>{FONT_LINK}<style>{CSS}</style><main>",
+             '<header class="top"><div class="eyebrow">KBO 직관 날씨 예보</div>',
              f"<h1>{e(date_title(day['date']))} 경기 날씨</h1>",
              f'<p class="stamp">{e(data_stamp(day))}</p>',
              "</header>"]
@@ -564,8 +596,9 @@ def to_html(day: dict) -> str:
         '<section class="legend">'
         '<b>강수 확률</b>은 ECMWF·AIFS·GEFS·ICON·GEM·UKMO 앙상블 멤버 각각을 하나의 날씨 시나리오로 보고, 경기 시간창(시작 1시간 전~종료)의 누적·최대 강수로 '
         '중단/취소 조건을 판정한 뒤 시스템별 비율을 평균한 값(75 %)에 고해상도 모델 7개의 동의율(25 %)을 섞은 것입니다. '
-        '기상청 단기·초단기예보가 연결돼 있으면 기상청 강수확률도 경기까지 남은 시간에 따라 25 %(하루 이상 전)~50 %(6시간 이내) 비중으로 함께 반영합니다. '
-        '<b>비거리 지수</b>는 100 mph·28°·1800 rpm 표준 타구를 오늘 공기밀도와 구장 외야 방향의 바람으로 시뮬레이션해 표준 대기(20 ℃·1013 hPa·50 %·무풍, 124.8 m)와 비교한 값이며, '
+        + ('여기에 기상청 단기·초단기예보의 강수확률을 경기까지 남은 시간에 따라 25 %(하루 이상 전)에서 50 %(6시간 이내)까지 비중을 두어 함께 반영했습니다. '
+           if kma_used else '이번 계산에서는 기상청 자료를 받지 못해 앙상블과 고해상도 모델만 썼습니다. ')
+        +         '<b>비거리 지수</b>는 100 mph·28°·1800 rpm 표준 타구를 오늘 공기밀도와 구장 외야 방향의 바람으로 시뮬레이션해 표준 대기(20 ℃·1013 hPa·50 %·무풍, 124.8 m)와 비교한 값이며, '
         '관중석이 바람을 막는 정도는 실측 자료가 없어 구장 구조를 보고 정한 추정값(1군 구장 50–55 %, 개방형 퓨처스 구장 80–85 %)을 10 m 풍속에 곱했습니다. 그림은 북쪽이 위인 구장 평면도이고 주황 화살표가 바람이 불어가는 방향입니다. '
         '<b>폭염</b>은 기상청 여름철 체감온도 산출식과 KBO 2026-08 개정 기준(체감 35 ℃ 취소 가능, 33 ℃ 지연 가능)을 따릅니다. '
         f'생성 {e(day["generated_at"][:16])} · 데이터 {"기상청(단기예보 조회서비스), " if kma_used else ""}Open-Meteo, KBO 공식 일정 · 위성 판독 구장 방위각(±10°)'
