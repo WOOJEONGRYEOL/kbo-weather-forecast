@@ -8,6 +8,8 @@ KBO 1군·퓨처스리그 **오늘 경기 전부**에 대해, 구장 좌표 기�
 
 을 매일 자동 생성합니다. **외부 패키지 0개, 운영비 0원** (Python 3.11+ 표준 라이브러리만). 키 없이도 돌고, 기상청 무료 키를 넣으면 기상청 예보가 함께 섞입니다.
 
+**공유용 대시보드 → https://woojeongryeol.github.io/kbo-weather-forecast/** (맥이나 GitHub 백업이 새 리포트를 올릴 때마다 자동 갱신)
+
 ```bash
 python3 -m kboweather today                 # 오늘 1군+퓨처스 전 경기 → out/YYYY-MM-DD.{md,html,json}
 python3 -m kboweather today --league 1      # 1군만
@@ -82,7 +84,8 @@ Brier 점수 1군 0.029 (기후값 0.057), 퓨처스 0.077 (기후값 0.129). 1�
 | 방법 | 파일 | 비용 |
 |---|---|---|
 | 1순위: 맥에서 매일 08:30·15:30 | `scripts/com.woo.kboweather.plist` → `~/Library/LaunchAgents/` (`scripts/run_auto.sh` 실행) | 0 |
-| 백업: GitHub Actions 10:00·16:15 | `.github/workflows/daily.yml` (Secrets 에 `KMA_SERVICE_KEY`, 선택 텔레그램) | 0 (private 저장소 무료 월 2,000분 중 월 수십 분) |
+| 백업: GitHub Actions 10:00·16:15 | `.github/workflows/daily.yml` (Secrets 에 `KMA_SERVICE_KEY`, 선택 텔레그램) | 0 (공개 저장소라 Actions 분당 제한 없음) |
+| 공유용 주소 | `.github/workflows/pages.yml` → GitHub Pages 로 `out/` 배포 (`out/**.html` 푸시 시 자동) | 0 |
 | 텔레그램 카드 | 경기마다 대시보드 카드 이미지 1장(접는 부분 제외) + 기상 데이터 업데이트 시각. 경기마다 한 장씩 따로 전송(기본 1군만, `telegram_leagues = [1, 2]` 면 퓨처스도). 맥은 WebKit(`scripts/webshot.swift`, 처음 한 번 컴파일), GitHub 은 Chrome 으로 그리고, 둘 다 안 되면 글자 버전. `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` (또는 `config.toml`) | 0 |
 | 캐스터 멘트 | `--narrate` → Ollama `gemma4:12b` (또는 `exaone3.5:2.4b`) | 0 (로컬) |
 | 음성 | `--speak` → `say -v Yuna` → `out/…-brief.m4a` | 0 |
@@ -97,6 +100,7 @@ API 호출량: 구장당 2회(결정론+앙상블) × 하루 ≤ 15구장 × 2�
 
 - `out/YYYY-MM-DD.md` — 텔레그램/콘솔용 요약
 - `out/YYYY-MM-DD.html` — 1군(기본)·퓨처스 탭 대시보드. 경기마다 서술형 '예보 근거 읽기'와 시간대별 표, 다크모드 대응. 주소 끝에 `#futures` 를 붙이면 퓨처스 탭으로 열림
+- `out/latest.html` · `out/index.html` — 항상 최신 대시보드. Pages 첫 화면이 여기로 연결됨
 - `out/YYYY-MM-DD.json` — 전체 수치 (시나리오별 확률, 모델별 강수, 비거리 시뮬레이션 상세)
 - `out/backtest-*.json` — 백테스트 원자료
 
