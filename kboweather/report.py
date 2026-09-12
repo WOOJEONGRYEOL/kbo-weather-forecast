@@ -208,7 +208,7 @@ font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:po
 grid-template-columns:1fr 136px;grid-template-rows:auto auto;gap:4px 14px;align-items:center}
 .flight .lab{grid-column:2;grid-row:1/3}
 .flight .full{aspect-ratio:880/148}
-.flight .zoom{aspect-ratio:880/188;background:var(--surface-2);border-radius:8px}
+.flight .zoom{aspect-ratio:880/210;background:var(--surface-2);border-radius:8px}
 .flight .mark{stroke:var(--ink-2);stroke-width:2}.flight .mark.today{stroke:var(--clay)}
 .flight .mlab{font:600 12px var(--body);fill:var(--ink-2)}.flight .mlab.today{fill:var(--clay)}
 .flight .lab .note{display:block;margin-top:6px;font-size:11px;color:var(--ink-2)}
@@ -260,6 +260,9 @@ h1{font-size:34px;line-height:1.05}
 .teams{gap:6px}
 .tm{width:24px;height:24px}
 table{font-size:12px}
+table th:nth-child(3),table td:nth-child(3),
+table th:nth-child(7),table td:nth-child(7),
+table th:nth-child(10),table td:nth-child(10){display:none}   /* 체감·모델 POP·구름은 좁은 화면에서 숨김 */
 }
 @media(prefers-reduced-motion:reduce){.streak,.ball,.play .rain{animation:none}}
 .static .streak,.static .ball,.static .play .rain{animation:none}
@@ -325,7 +328,7 @@ def flight_svg(r: dict) -> str:
     max_x = max(land_t, land_r, (fence or 0) + 4)
     max_z = max([p[1] for p in ref] + [p[1] for p in today]) or 1.0
 
-    def panel(w, base, top, pad, x0, x1, zmax, cls, extra=""):
+    def panel(w, base, top, pad, x0, x1, zmax, cls, extra="", bottom=20):
         sx, sz = (w - pad * 2) / (x1 - x0), (base - top) / zmax
 
         def d_of(pts):
@@ -339,7 +342,7 @@ def flight_svg(r: dict) -> str:
                     f'<path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/>'
                     f'<path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="{seam}" stroke-width="2.6"/></g>')
 
-        out = [f'<svg class="{cls}" viewBox="0 0 {w:.0f} {base + 20:.0f}" role="img" aria-hidden="true">',
+        out = [f'<svg class="{cls}" viewBox="0 0 {w:.0f} {base + bottom:.0f}" role="img" aria-hidden="true">',
                f'<line x1="0" y1="{base}" x2="{w:.0f}" y2="{base}" stroke="var(--line)" stroke-width="1.5"/>', extra]
         if fence:
             fx = pad + (fence - x0) * sx
@@ -355,7 +358,7 @@ def flight_svg(r: dict) -> str:
     zmax = min(max([z for x, z in today + ref if x >= x0] + [4.0]), 8.0)   # 담장이 눌리지 않게 상한
     marks = []
     zsx = (880 - 28) / (x1 - x0)
-    for x, label, cls, ly in ((land_t, f"오늘 {land_t:g} m", "today", 164), (land_r, f"표준 {land_r:g} m", "", 180)):
+    for x, label, cls, ly in ((land_t, f"오늘 {land_t:g} m", "today", 168), (land_r, f"표준 {land_r:g} m", "", 196)):
         mx = 14 + (x - x0) * zsx
         anchor = "end" if mx > 800 else "middle"
         marks.append(f'<line class="mark {cls}" x1="{mx:.1f}" y1="148" x2="{mx:.1f}" y2="138"/>'
@@ -363,7 +366,7 @@ def flight_svg(r: dict) -> str:
     if fence:
         fx = 14 + (fence - x0) * zsx
         marks.append(f'<text class="mlab" x="{fx:.1f}" y="{22}" text-anchor="middle">중앙담장 {fence:g} m</text>')
-    zoom, _, _ = panel(880, 148, 26, 14, x0, x1, zmax, "zoom", "".join(marks))
+    zoom, _, _ = panel(880, 148, 26, 14, x0, x1, zmax, "zoom", "".join(marks), bottom=62)
     delta = (cf or {}).get("delta_vs_ref_m") or carry.get("air_only_delta_m") or 0.0
     verdict = ("돔 — 공기 무게만 반영" if st["dome"] else
                "바람이 밀어줌" if delta > 0.5 else "바람이 붙잡음" if delta < -0.5 else "바람 영향 작음")
