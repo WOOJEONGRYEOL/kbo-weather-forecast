@@ -1,0 +1,233 @@
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KBO 직관 날씨 예보</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap"><style>
+:root{--bg:#EEF1EF;--surface:#FFFFFF;--surface-2:#F4F6F5;--ink:#14201B;--ink-2:#556661;--line:#D5DDD9;
+--clay:#B4532B;--grass:#2F7A4E;--grass-2:#BFDFC9;--rain:#2B6CB0;--warn:#B8860B;--bad:#B23A3A;--ok:#2E7D4F;--heat:#C4451C;
+--display:"Barlow Condensed","IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+--body:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0F1614;--surface:#182220;--surface-2:#1F2B28;--ink:#E6ECE9;--ink-2:#9FB0A8;--line:#2B3936;
+--clay:#DB7E52;--grass:#4FA774;--grass-2:#27503A;--rain:#6FA3E6;--warn:#D9A441;--bad:#E06A6A;--ok:#5DBB86;--heat:#F07A4E}}
+:root[data-theme=dark]{--bg:#0F1614;--surface:#182220;--surface-2:#1F2B28;--ink:#E6ECE9;--ink-2:#9FB0A8;--line:#2B3936;
+--clay:#DB7E52;--grass:#4FA774;--grass-2:#27503A;--rain:#6FA3E6;--warn:#D9A441;--bad:#E06A6A;--ok:#5DBB86;--heat:#F07A4E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);word-break:keep-all}
+main{max-width:1040px;margin:0 auto;padding:28px 20px 56px}
+.top{padding-bottom:2px}
+.eyebrow{font:600 12px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin-bottom:8px}
+h1{font:700 42px/1 var(--display);margin:0;letter-spacing:.01em;text-wrap:balance}
+.summary{color:var(--ink-2);margin:0 0 14px;max-width:80ch}
+.stamp{color:var(--ink-2);font-size:13px;margin:10px 0 0}
+h2{font:600 24px/1.1 var(--display);margin:34px 0 12px;letter-spacing:.02em;display:flex;align-items:baseline;gap:10px}
+h2 small{font:500 13px var(--body);color:var(--ink-2)}
+.game{display:grid;grid-template-columns:minmax(150px,1fr) minmax(250px,1.7fr) minmax(220px,1.1fr);gap:12px 26px;
+background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;margin:0 0 12px}
+.game>.rain{grid-column:2/-1}
+.game>*{min-width:0}                 /* 내용 최소 폭이 카드를 화면 밖으로 밀지 않게 */
+.game>details{grid-column:1/-1}
+.carrybox{grid-column:1/-1;border-top:1px dashed var(--line);padding-top:12px;display:grid;
+grid-template-columns:1fr;gap:12px;align-items:center}
+.carrybox .flight{grid-column:auto;border-top:0;margin-top:0;padding-top:0}
+@media(max-width:760px){.carrybox{grid-template-columns:1fr}}
+@media(max-width:760px){.game{grid-template-columns:1fr}}
+.time{font:700 36px/1 var(--display);font-variant-numeric:tabular-nums}
+.venue{font:600 19px/1.2 var(--display);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font:500 11px/1 var(--body);letter-spacing:.08em;border:1px solid var(--line);border-radius:3px;padding:3px 6px;color:var(--ink-2);white-space:nowrap}
+.tag.kbo{color:var(--ink);border-color:var(--ink-2)}
+.teams{margin-top:7px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tm[class*="tm-"]{background-color:transparent;box-shadow:none;font-size:0;background-size:contain;background-repeat:no-repeat;background-position:center}
+.tm{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;flex:none;
+font:700 10.5px/1 var(--body);letter-spacing:-.03em;color:#fff;background:var(--tm-bg,#555);
+box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22)}
+.meta{color:var(--ink-2);font-size:12.5px;margin-top:2px}
+.verdict{font-weight:600;display:flex;align-items:center;gap:8px}
+.verdict::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--ok)}
+.verdict.warn::before{background:var(--warn)}.verdict.bad::before{background:var(--bad)}.verdict.none::before{background:var(--line)}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.meter{display:grid;grid-template-columns:1fr auto;align-items:baseline;row-gap:5px}
+.meter .lbl{font-size:12px;color:var(--ink-2)}
+.meter .val{font:700 27px/1 var(--display);font-variant-numeric:tabular-nums}
+.meter i{grid-column:1/-1;display:block;height:6px;background:var(--surface-2);border-radius:3px;position:relative;overflow:hidden}
+.meter i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--rain);border-radius:3px}
+.fine{font-size:12px;color:var(--ink-2);margin-top:8px;overflow-wrap:anywhere}
+.field{display:grid;grid-template-columns:100px 1fr;grid-template-rows:auto auto auto;gap:3px 12px;align-items:center}
+.field svg{width:100px;height:100px;grid-row:1/4;display:block}
+.carry .big{font:700 28px/1 var(--display);font-variant-numeric:tabular-nums}
+.carry .big.up{color:var(--clay)}
+.carry .sub,.wind,.air{font-size:12px;color:var(--ink-2)}
+.wind b{color:var(--ink);font-weight:500}
+.hot{color:var(--heat);font-weight:600}
+details{border-top:1px dashed var(--line);padding-top:8px;font-size:13px;color:var(--ink-2)}
+summary{cursor:pointer;color:var(--ink);font-weight:500;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ "}details[open] summary::before{content:"▾ "}
+summary:focus-visible{outline:2px solid var(--rain);outline-offset:2px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--ink-2);font-weight:500;font-size:11.5px;letter-spacing:.04em}
+td:first-child,th:first-child{text-align:left}
+td.wet{color:var(--rain);font-weight:500}
+.legend{margin-top:36px;font-size:12.5px;color:var(--ink-2);line-height:1.65;max-width:78ch;border-top:1px solid var(--line);padding-top:14px}
+.legend b{color:var(--ink);font-weight:500}
+ul.skip{color:var(--ink-2);font-size:13px;overflow-wrap:anywhere}
+[hidden]{display:none!important}
+.tabs{display:flex;gap:22px;margin-top:18px;border-bottom:2px solid var(--ink)}
+.tab{appearance:none;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;padding:6px 2px 8px;
+font:600 24px/1 var(--display);letter-spacing:.02em;color:var(--ink-2);cursor:pointer;display:flex;align-items:baseline;gap:8px}
+.tab small{font:500 12px/1 var(--body);letter-spacing:0;color:var(--ink-2)}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--clay)}
+.tab:focus-visible{outline:2px solid var(--rain);outline-offset:3px;border-radius:3px}
+.panel{padding-top:16px}
+.empty{color:var(--ink-2);padding:28px 0}
+.why-body{display:grid;gap:10px;margin-top:10px;max-width:70ch}
+.why-body p{margin:0;color:var(--ink);font-size:14px;line-height:1.75}
+.why-body b{font-weight:600;margin-right:8px}
+.why-body p.note{color:var(--ink-2);font-size:12.5px;line-height:1.65}
+/* ---- 움직임: 바람 흐름, 타구 궤적, 시간대별 재생 ---- */
+@keyframes drift{0%{transform:translateX(-46px);opacity:0}20%{opacity:.5}80%{opacity:.5}100%{transform:translateX(46px);opacity:0}}
+@keyframes fly{0%{offset-distance:0%}70%{offset-distance:100%}100%{offset-distance:100%}}
+@keyframes rainfall{to{background-position:0 46px}}
+.streak{stroke:var(--rain);stroke-width:2;stroke-linecap:round;opacity:0;animation:drift var(--dur,3s) linear infinite var(--delay,0s)}
+.flight{grid-column:1/-1;border-top:1px dashed var(--line);margin-top:2px;padding-top:10px;display:grid;
+grid-template-columns:1fr 136px;grid-template-rows:auto auto;gap:4px 14px;align-items:center}
+.flight .lab{grid-column:2;grid-row:1/3}
+.flight .full{aspect-ratio:880/148}
+.flight .zoom{aspect-ratio:880/210;background:var(--surface-2);border-radius:8px}
+.flight .mark{stroke:var(--ink-2);stroke-width:2}.flight .mark.today{stroke:var(--clay)}
+.flight .mlab{font:600 12px var(--body);fill:var(--ink-2)}.flight .mlab.today{fill:var(--clay)}
+.flight .lab .note{display:block;margin-top:6px;font-size:11px;color:var(--ink-2)}
+.flight .lab .pass{display:block;margin-top:5px;font-size:12px;color:var(--ink)}
+.flight svg{width:100%;height:auto;display:block}
+.flight .trace{fill:none;stroke:var(--ink-2);stroke-width:1.3;stroke-dasharray:4 4;opacity:.75}
+.flight .trace.today{stroke:var(--clay);stroke-width:2.2;stroke-dasharray:none;opacity:1}
+.ball{animation:fly var(--dur,5s) linear infinite;offset-path:var(--p);offset-rotate:0deg}
+.ball.ghost{opacity:.6}
+.ball.ghost circle{stroke-dasharray:3.5 3}
+.flight .lab{font-size:12px;color:var(--ink-2);line-height:1.6}
+.flight .lab b{display:block;font:700 17px/1.2 var(--display);color:var(--ink);margin-bottom:2px}
+.flight .k{display:inline-block;width:12px;height:0;border-top:2px solid var(--ink-2);vertical-align:middle;margin-right:6px}
+.flight .k.today{border-top-color:var(--clay);border-top-width:3px}
+.play{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:center;margin:10px 0 12px}
+.play .stage{position:relative;height:168px;display:grid;place-items:center;overflow:hidden;border-radius:8px;background:linear-gradient(160deg,var(--surface-2),var(--surface))}
+.play .plane{width:188px;height:188px;transform:perspective(560px) rotateX(50deg);transform-origin:50% 50%}
+.play .plane svg{width:188px;height:188px;display:block}
+.play .windrose{transform:rotate(var(--to,0deg));transform-origin:50px 50px;transition:transform .12s linear}
+.pnote{font-size:11.5px;color:var(--ink-2);margin-top:2px}
+.play .rain{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s;
+background-image:repeating-linear-gradient(74deg,var(--rain) 0 1px,transparent 1px 9px);animation:rainfall .8s linear infinite}
+.play .controls{display:grid;gap:9px;justify-items:start}
+.pbtn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;
+padding:7px 16px;font:600 13px var(--body);cursor:pointer}
+.pbtn:hover{border-color:var(--ink-2)}
+.pbtn:focus-visible,.scrub:focus-visible{outline:2px solid var(--rain);outline-offset:2px}
+.scrub{width:100%;accent-color:var(--grass)}
+.rvals{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.6}
+.rvals b{color:var(--ink);font-weight:600}
+@media(max-width:760px){
+.game{padding:14px 14px 12px}
+.game>.rain{grid-column:1}                      /* 1열로 접힐 때 2번째 열 고정 해제 */
+.flight{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+.flight .lab{grid-column:1;grid-row:auto}
+.carrybox{grid-template-columns:1fr}
+.play{grid-template-columns:1fr}
+.play .stage{width:100%}
+.flight svg text,.flight .mlab{font-size:20px}   /* 그림이 축소돼도 읽히게 */
+.field{grid-template-columns:92px 1fr}
+}
+@media(max-width:480px){
+main{padding:20px 14px 40px}
+h1{font-size:34px;line-height:1.05}
+.time{font-size:30px}
+.meters{grid-template-columns:1fr;gap:10px;margin-top:8px}
+.meter{grid-template-columns:1fr auto;column-gap:10px}
+.meter .lbl{font-size:12.5px;line-height:1.3}
+.meter .val{font-size:24px}
+.teams{gap:6px}
+.tm{width:24px;height:24px}
+table{font-size:12px}
+table th:nth-child(3),table td:nth-child(3),
+table th:nth-child(7),table td:nth-child(7),
+table th:nth-child(10),table td:nth-child(10){display:none}   /* 체감·모델 POP·구름은 좁은 화면에서 숨김 */
+}
+@media(prefers-reduced-motion:reduce){.streak,.ball,.play .rain{animation:none}}
+.static .streak,.static .ball,.static .play .rain{animation:none}
+</style><style>.tm-HT{background-image:url(data:image/png;base64,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)}.tm-LG{background-image:url(data:image/png;base64,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)}</style><main><header class="top"><div class="eyebrow">KBO 직관 날씨 예보</div><h1>2026-10-20 (화) 경기 날씨</h1><p class="stamp">기상 데이터 10/20 14:44 업데이트 · 기상청 단기예보 14:00 · 초단기예보 13:30 발표분</p></header><div class="tabs" role="tablist" aria-label="리그 선택"><button type="button" class="tab" role="tab" id="tab-kbo" data-key="kbo" aria-controls="panel-kbo" aria-selected="true" tabindex="0">1군<small>1경기</small></button><button type="button" class="tab" role="tab" id="tab-futures" data-key="futures" aria-controls="panel-futures" aria-selected="false" tabindex="-1">퓨처스<small>0경기</small></button></div><section class="panel" role="tabpanel" id="panel-kbo" aria-labelledby="tab-kbo"><p class="summary">1경기 · 전 구장 강수 걱정 없음 · 타구가 가장 뻗는 곳 잠실 +1.3 m, 가장 안 뻗는 곳 잠실 +1.3 m</p><article class="game"><div class="match"><div class="time">18:30</div><div class="venue">잠실<span class="tag">KBO 1군</span></div><div class="teams"><span class="tm tm-HT" role="img" aria-label="KIA" title="KIA"></span><span>KIA vs LG</span><span class="tm tm-LG" role="img" aria-label="LG" title="LG"></span></div><div class="meta">서울종합운동장 야구장 (잠실) · 선발 시라카와 · 카라스코</div></div><div class="rain"><div class="verdict ok">강수 걱정 없음</div><div class="meters"><div class="meter"><span class="lbl">경기중 강수 확률</span><span class="val">22%</span><i style="--w:22%"></i></div><div class="meter"><span class="lbl">중단 확률</span><span class="val">0%</span><i style="--w:0%"></i></div><div class="meter"><span class="lbl">취소 확률</span><span class="val">0%</span><i style="--w:0%"></i></div></div><div class="fine">경기창 17:30–22:00 · 강수 중앙값 0.0 mm / 상위 10 % 0.5 mm · 앙상블 212멤버 + 모델 7개 + 기상청(강수확률 최고 30 %)</div></div><details class="why"><summary>예보 근거 읽기</summary><div class="why-body"><p><b>비</b>경기 시작 1시간 전부터 끝날 때까지(17:30~22:00), 세계 6개 예보 기관이 내놓은 날씨 시나리오 212개를 하나씩 따져봤습니다. 그중 32개(15 %)에서 경기 중 비가 내립니다. 시간당 1.5 mm를 넘겨 경기를 멈출 만한 비가 1개입니다. 고해상도 예보 모델 7개 중에서는 1개(독일 ICON)가 비를 예상했고, 가장 많이 본 모델(독일 ICON)은 경기 중 0.9 mm를 내다봤습니다. 기상청 초단기·단기예보는 경기 시간 강수확률을 최고 30 %로 봤고, 예상 강수량은 0 mm입니다. 경기까지 약 4시간 남아 기상청 예보를 50 % 비중으로 반영했습니다. 그래서 최종 &#x27;경기중 강수 확률&#x27;은 22 %입니다.</p><p><b>바람</b>잠실 구장은 홈플레이트에서 봤을 때 중앙 담장이 남동쪽(136°)을 향합니다. 19:00 무렵에는 서쪽에서 초속 1.8 m의 바람이 불 것으로 보입니다. 높은 관중석이 바람을 막아 그라운드에는 50 % 정도만 들어온다고 봤습니다(추정값). 타구 방향으로 보면 중앙 쪽 뒷바람(초속 0.6 m)이 되어 공을 밀어줍니다.</p><p><b>비거리</b>19:00 예상 기온 18.0℃, 습도 65 %, 기압 1015.3 hPa. 공기가 표준(20℃·1013 hPa)보다 0.6 % 무거워, 공기만 따지면 비거리가 −0.3 m 달라집니다. 바람까지 넣으면, 표준 조건에서 125.1 m 날아가는 타구(시속 161 km·발사각 30°)가 오늘은 중앙 쪽으로 126.5 m(+1.3 m) 날아갑니다. 우타자가 당겨친 좌측 타구는 +1.9 m, 좌타자가 당겨친 우측 타구는 −0.2 m입니다. 비거리가 1 % 늘면 홈런은 6 %쯤 늘어나기 때문에, 평소보다 홈런이 6 % 많이 나올 만한 날씨입니다.</p><p><b>더위</b>경기 시간 최고 체감온도는 20.2℃(17:00)로 더위 걱정은 없습니다.</p><p class="note">판정 기준 — 시간당 1.5 mm가 넘으면 중단, 5회를 마치기 전(시작 후 2시간) 시간당 3 mm 이상이거나 경기 중 누적 6 mm 이상이면 취소로 봅니다. 2026 시즌 실제 취소 기록(우천·그라운드사정 140건)으로 검증한 값입니다.</p><p class="note">구장 방향은 위성사진에서 직접 잰 값으로, 오차는 ±8° 정도입니다. 담장 거리는 좌 100 m, 중앙 125 m, 우 100 m입니다.</p></div></details><details><summary>시간대별 · 6시간</summary><div class="play" data-hours="[{&quot;t&quot;: &quot;17:00&quot;, &quot;temp&quot;: 20, &quot;rh&quot;: 56, &quot;spd&quot;: 1.8, &quot;dir&quot;: 256, &quot;comp&quot;: &quot;서남서&quot;, &quot;p&quot;: 0.099}, {&quot;t&quot;: &quot;18:00&quot;, &quot;temp&quot;: 19, &quot;rh&quot;: 61, &quot;spd&quot;: 1.8, &quot;dir&quot;: 265, &quot;comp&quot;: &quot;서&quot;, &quot;p&quot;: 0.104}, {&quot;t&quot;: &quot;19:00&quot;, &quot;temp&quot;: 18, &quot;rh&quot;: 65, &quot;spd&quot;: 1.8, &quot;dir&quot;: 272, &quot;comp&quot;: &quot;서&quot;, &quot;p&quot;: 0.179}, {&quot;t&quot;: &quot;20:00&quot;, &quot;temp&quot;: 17, &quot;rh&quot;: 67, &quot;spd&quot;: 1.7, &quot;dir&quot;: 277, &quot;comp&quot;: &quot;서&quot;, &quot;p&quot;: 0.203}, {&quot;t&quot;: &quot;21:00&quot;, &quot;temp&quot;: 16, &quot;rh&quot;: 71, &quot;spd&quot;: 1.6, &quot;dir&quot;: 274, &quot;comp&quot;: &quot;서&quot;, &quot;p&quot;: 0.226}, {&quot;t&quot;: &quot;22:00&quot;, &quot;temp&quot;: 16, &quot;rh&quot;: 70, &quot;spd&quot;: 1.5, &quot;dir&quot;: 259, &quot;comp&quot;: &quot;서&quot;, &quot;p&quot;: 0.208}]"><div class="stage"><div class="plane"><svg viewBox="0 0 100 100" role="img" aria-label="서울종합운동장 야구장 (잠실) 외야 방향과 바람"><g transform="rotate(136,50,50)" opacity="1"><path d="M50.0,74.0 L17.5,41.5 A46.0,46.0 0 0 1 82.5,41.5 Z" fill="var(--grass-2)" stroke="var(--grass)" stroke-width="1.5" stroke-linejoin="round"/><path d="M50.0,74.0 l-11,-11 l11,-11 l11,11 z" fill="var(--surface)" stroke="var(--grass)" stroke-width="1"/></g><text x="50" y="9" text-anchor="middle" font-size="8" font-weight="600" fill="var(--ink-2)" font-family="var(--body)">N</text><g class="windrose " transform="rotate(0,50,50)"><line class="streak" x1="43" y1="36" x2="57" y2="36" style="--dur:4.7s;--delay:0.0s"/><line class="streak" x1="43" y1="50" x2="57" y2="50" style="--dur:4.7s;--delay:0.5s"/><line class="streak" x1="43" y1="64" x2="57" y2="64" style="--dur:4.7s;--delay:1.0s"/></g></svg></div><div class="rain" aria-hidden="true"></div></div><div class="controls"><button type="button" class="pbtn">▶ 재생</button><input type="range" class="scrub" min="0" max="5" step="1" value="0" aria-label="시간 선택"><div class="rvals"></div><div class="pnote">예보는 1시간 단위 · 사이 시간은 앞뒤 값을 이어서 그립니다</div></div></div><div class="wrap"><table><tr><th>시각</th><th>기온 ℃</th><th>체감 ℃</th><th>습도 %</th><th>강수 중앙/최대 mm</th><th>비 확률 (앙상블)</th><th>모델 POP</th><th>기상청 POP</th><th>바람 m/s</th><th>구름 %</th></tr><tr><td>17:00</td><td>20.0</td><td>20.2</td><td>56</td><td class="">0.0 / 0.0</td><td class="">10%</td><td>4 %</td><td>0 %</td><td>서남서 1.82</td><td>83</td></tr><tr><td>18:00</td><td>19.0</td><td>19.6</td><td>61</td><td class="">0.0 / 0.0</td><td class="">10%</td><td>6 %</td><td>20 %</td><td>서 1.83</td><td>95</td></tr><tr><td>19:00</td><td>18.0</td><td>18.9</td><td>65</td><td class="">0.0 / 0.0</td><td class="">18%</td><td>10 %</td><td>30 %</td><td>서 1.77</td><td>100</td></tr><tr><td>20:00</td><td>16.6</td><td>17.6</td><td>67</td><td class="">0.0 / 0.1</td><td class="">20%</td><td>13 %</td><td>20 %</td><td>서 1.71</td><td>96</td></tr><tr><td>21:00</td><td>16.0</td><td>17.3</td><td>71</td><td class="">0.0 / 0.8</td><td class="">23%</td><td>16 %</td><td>20 %</td><td>서 1.59</td><td>98</td></tr><tr><td>22:00</td><td>15.65</td><td>16.9</td><td>70</td><td class="">0.0 / 0.2</td><td class="">21%</td><td>14 %</td><td>20 %</td><td>서 1.46</td><td>98</td></tr></table></div></details><div class="carrybox"><div class="field"><svg viewBox="0 0 100 100" role="img" aria-label="서울종합운동장 야구장 (잠실) 외야 방향과 바람"><g transform="rotate(136,50,50)" opacity="1"><path d="M50.0,74.0 L17.5,41.5 A46.0,46.0 0 0 1 82.5,41.5 Z" fill="var(--grass-2)" stroke="var(--grass)" stroke-width="1.5" stroke-linejoin="round"/><path d="M50.0,74.0 l-11,-11 l11,-11 l11,11 z" fill="var(--surface)" stroke="var(--grass)" stroke-width="1"/></g><text x="50" y="9" text-anchor="middle" font-size="8" font-weight="600" fill="var(--ink-2)" font-family="var(--body)">N</text><line x1="40.8" y1="49.7" x2="59.2" y2="50.3" stroke="var(--clay)" stroke-width="3" stroke-linecap="round"/><polygon points="0,-5 9,0 0,5" fill="var(--clay)" transform="translate(59.2,50.3) rotate(2)"/><g class="windrose " transform="rotate(2,50,50)"><line class="streak" x1="43" y1="36" x2="57" y2="36" style="--dur:6.0s;--delay:0.0s"/><line class="streak" x1="43" y1="50" x2="57" y2="50" style="--dur:6.0s;--delay:0.5s"/><line class="streak" x1="43" y1="64" x2="57" y2="64" style="--dur:6.0s;--delay:1.0s"/></g></svg><div class="carry"><span class="big ">+1.3m</span><br><span class="sub">비거리 지수 · 좌 +1.9m · 우 −0.2m · 홈런 ×1.06</span></div><div class="wind"><b>서풍 1.77 m/s</b> → 외야 순풍 0.6 m/s</div><div class="air">19:00 18.0℃ · 습도 65 % · 1015.3 hPa</div></div><div class="flight"><svg class="full" viewBox="0 0 880 148" role="img" aria-hidden="true"><line x1="0" y1="128" x2="880" y2="128" stroke="var(--line)" stroke-width="1.5"/><rect x="836.6" y="117.8" width="6" height="10.2" fill="var(--grass)" rx="1.5"/><path class="trace" d="M14.0,124.1 L39.1,115.5 L63.5,107.3 L86.7,99.4 L109.8,92.0 L131.6,85.0 L152.7,78.3 L173.8,72.0 L193.6,66.1 L213.5,60.5 L232.6,55.2 L251.1,50.3 L269.6,45.8 L287.4,41.6 L304.6,37.7 L321.8,34.1 L338.3,30.9 L354.8,28.0 L370.7,25.4 L386.5,23.1 L401.7,21.2 L416.9,19.5 L432.1,18.2 L446.6,17.2 L461.1,16.5 L475.7,16.1 L489.5,16.0 L504.1,16.2 L517.3,16.7 L531.1,17.5 L544.4,18.6 L557.6,20.0 L570.8,21.6 L584.0,23.6 L597.2,25.8 L609.7,28.4 L622.3,31.2 L634.8,34.2 L647.4,37.6 L659.9,41.2 L671.8,45.0 L683.7,49.2 L696.3,53.6 L708.1,58.2 L720.0,63.1 L731.9,68.2 L743.8,73.6 L755.0,79.2 L766.9,85.1 L778.2,91.1 L790.0,97.4 L801.3,103.9 L812.5,110.6 L823.7,117.6 L835.6,124.7 L840.2,128.0"/><path class="trace today" d="M14.0,124.1 L39.1,115.5 L63.5,107.3 L86.7,99.5 L109.8,92.0 L131.6,85.0 L153.4,78.3 L173.8,72.1 L194.3,66.1 L214.1,60.5 L233.3,55.3 L251.8,50.4 L270.3,45.9 L288.1,41.7 L305.9,37.8 L323.1,34.3 L339.6,31.1 L356.1,28.2 L372.6,25.6 L388.5,23.4 L404.3,21.5 L419.5,19.9 L434.7,18.6 L449.9,17.6 L464.4,16.9 L479.0,16.6 L493.5,16.5 L507.4,16.7 L521.2,17.3 L535.1,18.1 L549.0,19.2 L562.2,20.6 L576.1,22.3 L589.3,24.3 L602.5,26.6 L615.0,29.2 L628.2,32.0 L640.8,35.1 L654.0,38.5 L666.5,42.1 L679.1,46.0 L691.0,50.2 L703.5,54.6 L716.1,59.3 L728.0,64.2 L739.9,69.4 L752.4,74.8 L764.3,80.5 L776.2,86.4 L788.1,92.5 L800.0,98.8 L811.2,105.4 L823.1,112.1 L835.0,119.1 L846.2,126.3 L849.5,128.0"/><g class="ball ghost" style="--p:path('M14.0,124.1 L39.1,115.5 L63.5,107.3 L86.7,99.4 L109.8,92.0 L131.6,85.0 L152.7,78.3 L173.8,72.0 L193.6,66.1 L213.5,60.5 L232.6,55.2 L251.1,50.3 L269.6,45.8 L287.4,41.6 L304.6,37.7 L321.8,34.1 L338.3,30.9 L354.8,28.0 L370.7,25.4 L386.5,23.1 L401.7,21.2 L416.9,19.5 L432.1,18.2 L446.6,17.2 L461.1,16.5 L475.7,16.1 L489.5,16.0 L504.1,16.2 L517.3,16.7 L531.1,17.5 L544.4,18.6 L557.6,20.0 L570.8,21.6 L584.0,23.6 L597.2,25.8 L609.7,28.4 L622.3,31.2 L634.8,34.2 L647.4,37.6 L659.9,41.2 L671.8,45.0 L683.7,49.2 L696.3,53.6 L708.1,58.2 L720.0,63.1 L731.9,68.2 L743.8,73.6 L755.0,79.2 L766.9,85.1 L778.2,91.1 L790.0,97.4 L801.3,103.9 L812.5,110.6 L823.7,117.6 L835.6,124.7 L840.2,128.0');--dur:8.1s"><circle r="13" fill="#FFFFFF" stroke="#8A948F" stroke-width="2.2"/><path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="#9AA3A0" stroke-width="2.6"/><path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="#9AA3A0" stroke-width="2.6"/></g><g class="ball" style="--p:path('M14.0,124.1 L39.1,115.5 L63.5,107.3 L86.7,99.5 L109.8,92.0 L131.6,85.0 L153.4,78.3 L173.8,72.1 L194.3,66.1 L214.1,60.5 L233.3,55.3 L251.8,50.4 L270.3,45.9 L288.1,41.7 L305.9,37.8 L323.1,34.3 L339.6,31.1 L356.1,28.2 L372.6,25.6 L388.5,23.4 L404.3,21.5 L419.5,19.9 L434.7,18.6 L449.9,17.6 L464.4,16.9 L479.0,16.6 L493.5,16.5 L507.4,16.7 L521.2,17.3 L535.1,18.1 L549.0,19.2 L562.2,20.6 L576.1,22.3 L589.3,24.3 L602.5,26.6 L615.0,29.2 L628.2,32.0 L640.8,35.1 L654.0,38.5 L666.5,42.1 L679.1,46.0 L691.0,50.2 L703.5,54.6 L716.1,59.3 L728.0,64.2 L739.9,69.4 L752.4,74.8 L764.3,80.5 L776.2,86.4 L788.1,92.5 L800.0,98.8 L811.2,105.4 L823.1,112.1 L835.0,119.1 L846.2,126.3 L849.5,128.0');--dur:8.1s"><circle r="13" fill="#FBFBF8" stroke="#14201B" stroke-width="2.2"/><path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="#C0392B" stroke-width="2.6"/><path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="#C0392B" stroke-width="2.6"/></g></svg><svg class="zoom" viewBox="0 0 880 210" role="img" aria-hidden="true"><line x1="0" y1="148" x2="880" y2="148" stroke="var(--line)" stroke-width="1.5"/><line class="mark today" x1="705.2" y1="148" x2="705.2" y2="138"/><text class="mlab today" x="705.2" y="168" text-anchor="middle">오늘 126.5 m</text><line class="mark " x1="660.2" y1="148" x2="660.2" y2="138"/><text class="mlab " x="660.2" y="196" text-anchor="middle">표준 125.1 m</text><text class="mlab" x="657.0" y="22" text-anchor="middle">중앙담장 125 m</text><rect x="654.0" y="108.3" width="6" height="39.6" fill="var(--grass)" rx="1.5"/><path class="trace" d="M-3361.8,132.8 L-3239.7,99.5 L-3120.7,67.8 L-3008.2,37.4 L-2895.7,8.8 L-2789.6,-18.5 L-2686.7,-44.3 L-2583.8,-68.7 L-2487.3,-91.7 L-2390.9,-113.4 L-2297.7,-133.8 L-2207.6,-152.7 L-2117.6,-170.4 L-2030.8,-186.7 L-1947.2,-201.7 L-1863.6,-215.6 L-1783.2,-228.1 L-1702.9,-239.3 L-1625.7,-249.3 L-1548.5,-258.1 L-1474.6,-265.6 L-1400.6,-272.0 L-1326.7,-277.0 L-1256.0,-281.0 L-1185.2,-283.7 L-1114.5,-285.3 L-1047.0,-285.7 L-976.2,-284.9 L-911.9,-283.0 L-844.4,-279.9 L-780.1,-275.6 L-715.8,-270.3 L-651.5,-263.9 L-587.2,-256.3 L-522.9,-247.6 L-461.8,-237.8 L-400.7,-227.0 L-339.7,-215.1 L-278.6,-202.1 L-217.5,-188.3 L-159.6,-173.3 L-101.7,-157.3 L-40.7,-140.2 L17.2,-122.2 L75.1,-103.3 L133.0,-83.5 L190.8,-62.6 L245.5,-40.9 L303.4,-18.2 L358.0,5.3 L415.9,29.5 L470.5,54.8 L525.2,80.7 L579.9,107.6 L637.7,135.2 L660.2,148.0"/><path class="trace today" d="M-3361.8,132.8 L-3239.7,99.5 L-3120.7,67.8 L-3008.2,37.6 L-2895.7,8.8 L-2789.6,-18.4 L-2683.5,-44.3 L-2583.8,-68.5 L-2484.1,-91.6 L-2387.7,-113.2 L-2294.4,-133.5 L-2204.4,-152.4 L-2114.4,-170.0 L-2027.6,-186.1 L-1940.8,-201.2 L-1857.2,-214.8 L-1776.8,-227.3 L-1696.4,-238.4 L-1616.1,-248.3 L-1538.9,-257.0 L-1461.7,-264.5 L-1387.8,-270.8 L-1313.8,-275.8 L-1239.9,-279.6 L-1169.2,-282.2 L-1098.4,-283.6 L-1027.7,-283.9 L-960.2,-283.0 L-892.7,-280.8 L-825.1,-277.6 L-757.6,-273.4 L-693.3,-267.9 L-625.8,-261.3 L-561.5,-253.5 L-497.2,-244.7 L-436.1,-234.8 L-371.8,-223.8 L-310.7,-211.7 L-246.4,-198.6 L-185.3,-184.6 L-124.2,-169.4 L-66.4,-153.2 L-5.3,-136.1 L55.8,-118.0 L113.7,-98.9 L171.5,-78.8 L232.6,-57.9 L290.5,-35.9 L348.4,-13.2 L406.2,10.4 L464.1,35.0 L518.8,60.3 L576.6,86.5 L634.5,113.5 L689.2,141.3 L705.2,148.0"/><g class="ball ghost" style="--p:path('M-3361.8,132.8 L-3239.7,99.5 L-3120.7,67.8 L-3008.2,37.4 L-2895.7,8.8 L-2789.6,-18.5 L-2686.7,-44.3 L-2583.8,-68.7 L-2487.3,-91.7 L-2390.9,-113.4 L-2297.7,-133.8 L-2207.6,-152.7 L-2117.6,-170.4 L-2030.8,-186.7 L-1947.2,-201.7 L-1863.6,-215.6 L-1783.2,-228.1 L-1702.9,-239.3 L-1625.7,-249.3 L-1548.5,-258.1 L-1474.6,-265.6 L-1400.6,-272.0 L-1326.7,-277.0 L-1256.0,-281.0 L-1185.2,-283.7 L-1114.5,-285.3 L-1047.0,-285.7 L-976.2,-284.9 L-911.9,-283.0 L-844.4,-279.9 L-780.1,-275.6 L-715.8,-270.3 L-651.5,-263.9 L-587.2,-256.3 L-522.9,-247.6 L-461.8,-237.8 L-400.7,-227.0 L-339.7,-215.1 L-278.6,-202.1 L-217.5,-188.3 L-159.6,-173.3 L-101.7,-157.3 L-40.7,-140.2 L17.2,-122.2 L75.1,-103.3 L133.0,-83.5 L190.8,-62.6 L245.5,-40.9 L303.4,-18.2 L358.0,5.3 L415.9,29.5 L470.5,54.8 L525.2,80.7 L579.9,107.6 L637.7,135.2 L660.2,148.0');--dur:8.1s"><circle r="13" fill="#FFFFFF" stroke="#8A948F" stroke-width="2.2"/><path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="#9AA3A0" stroke-width="2.6"/><path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="#9AA3A0" stroke-width="2.6"/></g><g class="ball" style="--p:path('M-3361.8,132.8 L-3239.7,99.5 L-3120.7,67.8 L-3008.2,37.6 L-2895.7,8.8 L-2789.6,-18.4 L-2683.5,-44.3 L-2583.8,-68.5 L-2484.1,-91.6 L-2387.7,-113.2 L-2294.4,-133.5 L-2204.4,-152.4 L-2114.4,-170.0 L-2027.6,-186.1 L-1940.8,-201.2 L-1857.2,-214.8 L-1776.8,-227.3 L-1696.4,-238.4 L-1616.1,-248.3 L-1538.9,-257.0 L-1461.7,-264.5 L-1387.8,-270.8 L-1313.8,-275.8 L-1239.9,-279.6 L-1169.2,-282.2 L-1098.4,-283.6 L-1027.7,-283.9 L-960.2,-283.0 L-892.7,-280.8 L-825.1,-277.6 L-757.6,-273.4 L-693.3,-267.9 L-625.8,-261.3 L-561.5,-253.5 L-497.2,-244.7 L-436.1,-234.8 L-371.8,-223.8 L-310.7,-211.7 L-246.4,-198.6 L-185.3,-184.6 L-124.2,-169.4 L-66.4,-153.2 L-5.3,-136.1 L55.8,-118.0 L113.7,-98.9 L171.5,-78.8 L232.6,-57.9 L290.5,-35.9 L348.4,-13.2 L406.2,10.4 L464.1,35.0 L518.8,60.3 L576.6,86.5 L634.5,113.5 L689.2,141.3 L705.2,148.0');--dur:8.1s"><circle r="13" fill="#FBFBF8" stroke="#14201B" stroke-width="2.2"/><path d="M-7,-10.2 A13.7,13.7 0 0 0 -7,10.2" fill="none" stroke="#C0392B" stroke-width="2.6"/><path d="M7,-10.2 A13.7,13.7 0 0 1 7,10.2" fill="none" stroke="#C0392B" stroke-width="2.6"/></g></svg><div class="lab"><b>+1.3m</b><span class="k today"></span>오늘 126.5 m<br><span class="k"></span>표준 125.1 m<br>바람이 밀어줌<span class="pass">담장(2.6 m) 지점 통과 높이 1.51 m (평소 0.12 m)</span><span class="note">기준 타구 161 km/h · 30° · 백스핀 1800 rpm<br>표준 = 20℃ · 1013 hPa · 무풍일 때의 같은 타구<br>아래는 담장 앞 26 m 확대</span></div></div></div></article></section><section class="panel" role="tabpanel" id="panel-futures" aria-labelledby="tab-futures" hidden><p class="empty">이 날은 퓨처스 경기가 없습니다.</p></section><section class="legend"><b>강수 확률</b>은 ECMWF·AIFS·GEFS·ICON·GEM·UKMO 앙상블 멤버 각각을 하나의 날씨 시나리오로 보고, 경기 시간창(시작 1시간 전~종료)의 누적·최대 강수로 중단/취소 조건을 판정한 뒤 시스템별 비율을 평균한 값(75 %)에 고해상도 모델 7개의 동의율(25 %)을 섞은 것입니다. 여기에 기상청 단기·초단기예보의 강수확률을 경기까지 남은 시간에 따라 25 %(하루 이상 전)에서 50 %(6시간 이내)까지 비중을 두어 함께 반영했습니다. <b>비거리 지수</b>는 100 mph·30°·1800 rpm 표준 타구를 오늘 공기밀도와 구장 외야 방향의 바람으로 시뮬레이션해 표준 대기(20 ℃·1013 hPa·50 %·무풍, 125.1 m)와 비교한 값이며, 관중석이 바람을 막는 정도는 실측 자료가 없어 구장 구조를 보고 정한 추정값(1군 구장 50–55 %, 개방형 퓨처스 구장 80–85 %)을 10 m 풍속에 곱했습니다. 그림은 북쪽이 위인 구장 평면도이고 주황 화살표가 바람이 불어가는 방향입니다. <b>폭염</b>은 기상청 여름철 체감온도 산출식과 KBO 2026-08 개정 기준(체감 35 ℃ 취소 가능, 33 ℃ 지연 가능)을 따릅니다. 생성 2026-10-20T14:44 · 데이터 기상청(단기예보 조회서비스), Open-Meteo, KBO 공식 일정 · 위성 판독 구장 방위각(±10°)</section></main><script>
+(function () {
+  var tabs = [].slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(t, focus) {
+    tabs.forEach(function (x) {
+      var on = x === t;
+      x.setAttribute("aria-selected", on ? "true" : "false");
+      x.tabIndex = on ? 0 : -1;
+      document.getElementById(x.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) t.focus();
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () {
+      show(t);
+      try { history.replaceState(null, "", "#" + t.dataset.key); } catch (e) {}
+    });
+    t.addEventListener("keydown", function (ev) {
+      var d = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
+      if (d) { ev.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+  var h = (location.hash || "").slice(1);
+  tabs.forEach(function (t) { if (t.dataset.key === h) show(t); });
+})();
+</script><script>
+(function () {
+  var STEPS = 12;                       // 한 시간을 12칸(5분)으로 나눠 부드럽게 이어 그림
+  document.querySelectorAll(".play").forEach(function (box) {
+    var hours = [];
+    try { hours = JSON.parse(box.dataset.hours || "[]"); } catch (e) { return; }
+    if (!hours.length) return;
+    var rose = box.querySelector(".windrose"), rain = box.querySelector(".rain"),
+        btn = box.querySelector(".pbtn"), scrub = box.querySelector(".scrub"),
+        out = box.querySelector(".rvals"), last = hours.length - 1,
+        frames = last * STEPS, timer = null, f = 0, angle = null, shown = null;
+    scrub.max = Math.max(frames, 1);
+    function lerp(a, b, u) { return a + (b - a) * u; }
+    function at(frame) {                 // 앞뒤 시간값을 섞어 그 사이 값을 만든다
+      var i = Math.min(last, Math.floor(frame / STEPS)), u = (frame - i * STEPS) / STEPS,
+          a = hours[i], b = hours[Math.min(last, i + 1)];
+      var ax = a.spd * Math.cos(a.dir * Math.PI / 180), ay = a.spd * Math.sin(a.dir * Math.PI / 180),
+          bx = b.spd * Math.cos(b.dir * Math.PI / 180), by = b.spd * Math.sin(b.dir * Math.PI / 180),
+          x = lerp(ax, bx, u), y = lerp(ay, by, u);
+      var mins = Math.round((+a.t.slice(0, 2) * 60 + +a.t.slice(3)) + u * 60);
+      return {t: ("0" + Math.floor(mins / 60) % 24).slice(-2) + ":" + ("0" + mins % 60).slice(-2),
+              temp: lerp(a.temp, b.temp, u), rh: lerp(a.rh == null ? 0 : a.rh, b.rh == null ? 0 : b.rh, u),
+              p: lerp(a.p, b.p, u), spd: Math.hypot(x, y),
+              dir: (Math.atan2(y, x) * 180 / Math.PI + 360) % 360, comp: u < .5 ? a.comp : b.comp};
+    }
+    function show(frame) {
+      f = Math.max(0, Math.min(frames, frame));
+      var h = at(f);
+      scrub.value = f;
+      if (rose) {
+        var target = (h.dir + 180) % 360 - 90;
+        if (angle === null) { angle = target; }
+        else { angle += ((target - angle + 540) % 360) - 180; }   // 짧은 쪽으로 돌린다
+        rose.style.setProperty("--to", angle.toFixed(1) + "deg");
+        var dur = Math.max(1.1, Math.min(6, 14 / Math.max(h.spd, 0.3))).toFixed(1) + "s";
+        if (dur !== shown) {
+          shown = dur;
+          box.querySelectorAll(".streak").forEach(function (l) { l.style.setProperty("--dur", dur); });
+        }
+      }
+      if (rain) rain.style.opacity = h.p > 0.02 ? Math.min(0.8, 0.12 + h.p) : 0;
+      out.innerHTML = "<b>" + h.t + "</b> · " + h.temp.toFixed(1) + "℃ · 습도 " + Math.round(h.rh)
+        + "% · 비 확률 " + Math.round(h.p * 100) + "% · " + h.comp + "풍 " + h.spd.toFixed(1) + " m/s";
+    }
+    function stop() { clearInterval(timer); timer = null; btn.textContent = "▶ 재생"; }
+    btn.addEventListener("click", function () {
+      if (timer) { stop(); return; }
+      if (f >= frames) show(0);
+      btn.textContent = "❚❚ 멈춤";
+      timer = setInterval(function () { if (f >= frames) { stop(); } else { show(f + 1); } }, 110);
+    });
+    scrub.addEventListener("input", function () { stop(); show(+scrub.value); });
+    show(0);
+  });
+})();
+</script>
