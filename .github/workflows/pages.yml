@@ -6,6 +6,10 @@ on:
     branches: [main]
     paths: ["out/**.html", ".github/workflows/pages.yml"]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["KBO weather briefing (backup)"]
+    types: [completed]
+    branches: [main]
 permissions:
   contents: read
   pages: write
