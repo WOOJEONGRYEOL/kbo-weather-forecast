@@ -22,11 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.retry.outputs.page_url || steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: out }
-      - id: deploy
+      # 업로드 직후 아티팩트 조회 API가 반영 전이라 'Found 0 artifact(s)'로 실패하는 일시 오류가
+      # 간헐적으로 있다. 1차 실패는 넘기고 잠시 후 한 번 더 시도한다(kbo-forecast 7029517과 동일).
+      - name: Pages 배포
+        id: deploy
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: 재시도 전 대기
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 25
+
+      - name: Pages 배포 (재시도)
+        id: retry
+        if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
